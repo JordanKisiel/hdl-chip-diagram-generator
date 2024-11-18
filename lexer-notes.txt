@@ -1,0 +1,45 @@
+-What classes of tokens are there?
+    -Keywords:
+        -CHIP (to declare that a chip is being defined)
+        -PARTS (to declare that the internal parts are being specified)
+        -IN (inputs)
+        -OUT (outputs)
+        -BUILTIN (should I support this? how so?)
+        -CLOCKED (for sequential chips that depend on time, I think I'll try adding this later)
+        -TRUE & FALSE? (are these keywords or constant values)
+    -Comments:
+        -//this is a single line comment
+        -/* this is a multi-line comment */
+    -Grouping:
+        -{ (begin chip specification)
+        -} (end chip specification)
+        -( (begin internal chip IO connections)
+        -) (end internal chip IO connections)
+        -[ (beginning of bus width or input/output bus connection range)
+        -] (end of bus witdth or input/output bus connection range)
+    -Separators:
+        -; (to end lines)
+        -, (to separate inputs, outputs after IN & OUT respectively, also to separate connections in internal chips)
+        -: (seems to come only after PARTS so maybe I should just make that part of the keyword?)
+    -Identifiers:
+        -overall chip
+        -chip inputs and outputs (pin names)
+        -chip parts
+        -(note: cannot start with a digit)
+    -Operators?
+        -= (this specifies connections into and out of a chip)
+        -(note: no arithmetic or boolean operators)
+    -Whitespace:
+        -is ignored
+    -Number:
+        -[w] where w is the width of a bus
+        -[begin..end] the range of inputs or outputs of a bus
+        -0, 1 for constant inputs
+        -(note: no floating points, only integers)
+
+
+-Errors:
+    -I need to keep track of line number (and file?) so if there's
+    an error in lexing, I can give the user feedback on where that error is
+    -However, I need to separate the code that generates errors from the
+    code that reports it

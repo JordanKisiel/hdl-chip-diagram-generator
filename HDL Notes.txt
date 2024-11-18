@@ -1,0 +1,12 @@
+-the order of the internal parts doesn't matter as long as all the chips
+are wired up correctly
+    -question: how would I verify the correctness of the wiring? some sort of graph or tree algorithm?
+-there are no expressions (i.e. nothing that evaluates multiple tokens to a value)
+-all numbers are integers and used only for 3 purposes:
+    -specifying bus widths
+    -specifying bus ranges
+    -as a constant input (0 or 1 only)
+-the only operator is the = assignment operator that allows specification
+of wiring up of inputs and outputs
+-there is no control flow (no ifs or loops)
+-
