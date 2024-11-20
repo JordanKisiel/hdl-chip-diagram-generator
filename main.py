@@ -16,7 +16,8 @@ def compile_to_python(source_path, dest_filename):
     with open(source_path, 'r') as source_file:
         source = source_file.read()
         generated_python = compile_file(source)
-    with open(f"compiled_files/{dest_filename}", "a") as dest_file:
+        print(generated_python)
+    with open(f"compiled_files/{dest_filename}", "w") as dest_file:
         dest_file.write(generated_python)
 
 
@@ -32,7 +33,7 @@ def compile_file(source_text):
     token_text = ""
 
     for token in tokens:
-        token_text += str(token)
+        token_text += f"[{token}]\n"
 
     return token_text
 
