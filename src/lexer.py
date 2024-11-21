@@ -12,9 +12,6 @@ class Lexer:
 
     def scan_tokens(self):
         while not self.is_at_end():
-            # at beginning of token
-            # probably don't need the start pointer
-            print(f"current: {self.current}")
             self.scan_token()
         
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
@@ -50,7 +47,6 @@ class Lexer:
         ident_match = re.match(token_types["identifier"][TokenType.IDENTIFIER], source)
         if ident_match:
             keywords = [keyword[1:-1] for keyword in list(token_types["keywords"].values())]
-            print(f"keywords: {keywords}")
             if ident_match.group(0) in keywords: 
                 for type in token_types["keywords"]:
                     if(self.match_keyword(type, source)):
@@ -59,8 +55,8 @@ class Lexer:
             self.match_identifier(TokenType.IDENTIFIER, source) 
             return
 
-        print(source[0])
         HDLError.error(self.line, "Unexpected character.") 
+        self.current += 1
     
     def is_at_end(self):
          return self.current >= len(self.source)
@@ -69,7 +65,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["single_chars"][token_type], source)
         if match:
-            print("matched single chars")
             self.add_token(token_type, match.group(0))
             self.current += 1
             matched = True
@@ -80,7 +75,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["double_chars"][token_type], source)
         if match:
-            print("matched double chars")
             self.add_token(token_type, match.group(0))
             self.current += 2 
             matched = True
@@ -91,10 +85,12 @@ class Lexer:
         matched = False
         match = re.match(token_types["skipped_text"][token_type], source)
         if match:
-            print("matched newline")
-            print(f"token: {token_type}")
-            print(match.group(0))
-            print(f"length: {len(match.group(0))}")
+            if token_type == TokenType.SINGLE_LINE_COMMENT:
+                self.line += 1
+            if token_type == TokenType.MULTI_LINE_COMMENT:
+                new_line_matches = re.findall(r"\n", match.group(0))
+                self.line += len(new_line_matches)
+
             self.current += len(match.group(0))
             matched = True
 
@@ -104,7 +100,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["newline"][token_type], source)
         if match:
-            print("matched newline")
             self.current += 1
             self.line += 1
             matched = True
@@ -115,7 +110,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["number"][token_type], source)
         if match:
-            print("matched number")
             self.add_token(token_type, match.group(0))
             self.current += len(match.group(0)) 
             matched = True
@@ -126,7 +120,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["identifier"][token_type], source)
         if match:
-            print("matched ident")
             self.add_token(token_type, match.group(0))
             self.current += len(match.group(0)) 
             matched = True
@@ -137,7 +130,6 @@ class Lexer:
         matched = False
         match = re.match(token_types["keywords"][token_type], source)
         if match:
-            print("matched keyword")
             self.add_token(token_type, match.group(0))
             self.current += len(match.group(0)) 
             matched = True

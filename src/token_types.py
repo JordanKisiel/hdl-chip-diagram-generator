@@ -45,12 +45,12 @@ TokenType = Enum("TokenType",
 # regex pattern
 token_types = {
     "single_chars": {
-        TokenType.LEFT_PAREN: r"([(])",
-        TokenType.RIGHT_PAREN: r"([)])",
-        TokenType.LEFT_BRACE: r"([{])",
-        TokenType.RIGHT_BRACE: r"([}])",
-        TokenType.LEFT_BRACKET: r"([[])",
-        TokenType.RIGHT_BRACKET: r"([]])",
+        TokenType.LEFT_PAREN: r"(\()",
+        TokenType.RIGHT_PAREN: r"(\))",
+        TokenType.LEFT_BRACE: r"(\{)",
+        TokenType.RIGHT_BRACE: r"(\})",
+        TokenType.LEFT_BRACKET: r"(\[)",
+        TokenType.RIGHT_BRACKET: r"(\])",
         TokenType.COMMA: r"([,])",
         TokenType.SEMICOLON: r"([;])",
         TokenType.EQUAL: r"([=])",

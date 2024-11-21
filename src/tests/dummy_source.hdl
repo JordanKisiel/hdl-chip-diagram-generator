@@ -12,5 +12,5 @@ CHIP EQ3 {
     Xor(a=a[2], b=b[2], out=c2);
     Or(a=c0, b=c1, out=c01);
     Or(a=c01, b=c2, out=neq);
-    Not(in=neq, out=out);
+    Not(in=neq, out=out); 
 }

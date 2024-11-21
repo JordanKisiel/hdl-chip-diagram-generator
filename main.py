@@ -1,6 +1,6 @@
 import sys
 from src.lexer import Lexer
-from src.hdl import HDL
+from src.hdl_error import HDLError
 
 def main():
     # incorrect number of args
@@ -16,7 +16,6 @@ def compile_to_python(source_path, dest_filename):
     with open(source_path, 'r') as source_file:
         source = source_file.read()
         generated_python = compile_file(source)
-        print(generated_python)
     with open(f"compiled_files/{dest_filename}", "w") as dest_file:
         dest_file.write(generated_python)
 
@@ -26,7 +25,7 @@ def compile_file(source_text):
     tokens = lexer.scan_tokens()
 
     # if there was an error, don't compile the file
-    if HDL.had_error:
+    if HDLError.had_error:
         sys.exit(65)
 
     # just printing the tokens for now
