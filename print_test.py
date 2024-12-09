@@ -8,7 +8,10 @@ def main():
                      Token(TokenType.LEFT_BRACE, "{", None, 1),
                      Header(
                         Token(TokenType.IN, "IN", None, 2),
-                        Chip_IO(Token(TokenType.IDENTIFIER, "in", None, 2), []),
+                        Chip_IO(Token(TokenType.IDENTIFIER, "in1", None, 2), 
+                                [
+                                    Extra_IO(Token(TokenType.COMMA, ",", None, 2), Token(TokenType.IDENTIFIER, "in2", None, 2))
+                                ]),
                         Token(TokenType.SEMICOLON, ";", None, 2),
                         Token(TokenType.OUT, "OUT", None, 3),
                         Chip_IO(Token(TokenType.IDENTIFIER, "out", None, 3), []),
@@ -36,10 +39,11 @@ def main():
                                     []
                                  ),
                                  Token(TokenType.RIGHT_PAREN, ")", None, 5),
+                                 Token(TokenType.SEMICOLON, ";", None, 5)
                              )
                          ]
                      ),
-                     Token(TokenType.RIGHT_BRACE, ")", None, 6))
+                     Token(TokenType.RIGHT_BRACE, "}", None, 6))
                             
 
     print(AST_Printer().print(chip))

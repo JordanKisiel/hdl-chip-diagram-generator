@@ -80,7 +80,7 @@ class Header(Grammar_Rule):
         self.in_token = in_token
         self.chip_io_1 = chip_io_1
         self.semi_token_1 = semi_token_1
-        self.out_token = out_token,
+        self.out_token = out_token
         self.chip_io_2 = chip_io_2
         self.semi_token_2 = semi_token_2
 
@@ -88,12 +88,20 @@ class Header(Grammar_Rule):
         return visitor.visit_header(self)
 
 class Chip_IO(Grammar_Rule):
-    def __init__(self, ident_or_bus, io_list = []):
+    def __init__(self, ident_or_bus, extra_io = []):
         self.ident_or_bus = ident_or_bus
-        self.io_list = io_list
+        self.extra_io = extra_io 
 
     def accept(self, visitor):
         return visitor.visit_chip_io(self)
+
+class Extra_IO(Grammar_Rule):
+    def __init__(self, comma_token, ident_or_bus):
+        self.comma_token = comma_token 
+        self.ident_or_bus = ident_or_bus 
+
+    def accept(self, visitor):
+        return visitor.visit_extra_io(self)
 
 class Bus(Grammar_Rule):
     def __init__(self,
@@ -113,7 +121,7 @@ class Body(Grammar_Rule):
     def __init__(self,
                  parts_token,
                  colon_token,
-                 parts_list):
+                 parts_list = []):
         self.parts_token = parts_token
         self.colon_token = colon_token
         self.parts_list = parts_list
@@ -125,12 +133,14 @@ class Part(Grammar_Rule):
     def __init__(self,
                  ident_token,
                  left_paren_token,
-                 connections,
-                 right_paren_token):
+                 connections_list,
+                 right_paren_token,
+                 semi_token):
         self.ident_token = ident_token
         self.left_paren_token = left_paren_token
-        self.connections = connections
+        self.connections_list = connections_list
         self.right_paren_token = right_paren_token
+        self.semi_token= semi_token 
 
     def accept(self, visitor):
         return visitor.visit_part(self)
@@ -140,11 +150,11 @@ class Connections_List(Grammar_Rule):
                  connect_1,
                  comma_token,
                  connect_2,
-                 connect_list = []):
+                 extra_connections = []):
         self.connect_1 = connect_1
         self.comma_token = comma_token
         self.connect_2 = connect_2
-        self.connect_list = connect_list 
+        self.extra_connections = extra_connections 
 
     def accept(self, visitor):
         return visitor.visit_connections_list(self)
@@ -160,6 +170,16 @@ class Connection(Grammar_Rule):
 
     def accept(self, visitor):
         return visitor.visit_connection(self)
+    
+class Extra_Connection(Grammar_Rule):
+    def __init__(self,
+                 comma_token,
+                 connection):
+        self.comma_token = comma_token
+        self.connection = connection
+
+    def accept(self, visitor):
+        return visitor.visit_extra_connection(self)
 
 class Sub_Bus(Grammar_Rule):
     def __init__(self,
