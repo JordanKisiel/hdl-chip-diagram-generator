@@ -4,5 +4,5 @@ IN in1, in2;
 OUT out;
 
 PARTS:
-Not(a=in, out=out);
+Not(a=in, a=in2, out=out);
 }
