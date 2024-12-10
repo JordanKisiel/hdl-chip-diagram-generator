@@ -1,5 +1,8 @@
 import sys
 from src.lexer import Lexer
+from src.parser import Parser
+from src.grammar import *
+from src.ast_printer import *
 from src.hdl_error import HDLError
 
 def main():
@@ -23,18 +26,15 @@ def compile_to_python(source_path, dest_filename):
 def compile_file(source_text):
     lexer = Lexer(source_text)
     tokens = lexer.scan_tokens()
+    parser = Parser(tokens)
+    chip = parser.parse()
+    printed_chip = AST_Printer().print(chip)
 
     # if there was an error, don't compile the file
     if HDLError.had_error:
         sys.exit(65)
 
-    # just printing the tokens for now
-    token_text = ""
-
-    for token in tokens:
-        token_text += f"[{token}]\n"
-
-    return token_text
+    return printed_chip
 
 
 if __name__ == "__main__":

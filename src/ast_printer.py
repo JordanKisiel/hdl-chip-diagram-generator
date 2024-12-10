@@ -32,13 +32,13 @@ class AST_Printer(Vistor):
             self.strs.append(f"{rule.ident_or_bus.lexeme}")
         
         for io in rule.extra_io:
-            io.accept(self) 
+            io.accept(self)
 
     def visit_extra_io(self, rule):
         self.strs.append(f"{rule.comma_token.lexeme} ")
 
         if isinstance(rule.ident_or_bus, Bus):
-            self.ident_or_bus.accept(self)
+            rule.ident_or_bus.accept(self)
         else:
             self.strs.append(f"{rule.ident_or_bus.lexeme}")
 
