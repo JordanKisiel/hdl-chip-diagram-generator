@@ -23,6 +23,10 @@ class Vistor(ABC):
         pass
 
     @abstractmethod
+    def visit_extra_io(grammar_rule):
+        pass
+
+    @abstractmethod
     def visit_bus(grammar_rule):
         pass
 
@@ -40,6 +44,10 @@ class Vistor(ABC):
 
     @abstractmethod
     def visit_connection(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_extra_connection(grammar_rule):
         pass
 
     @abstractmethod

@@ -4,6 +4,8 @@ from src.parser import Parser
 from src.grammar import *
 from src.ast_printer import *
 from src.hdl_error import HDLError
+from src.chip_diagram import Chip_Diagram
+from src.grid import Grid
 
 def main():
     # incorrect number of args
@@ -29,6 +31,12 @@ def compile_file(source_text):
     parser = Parser(tokens)
     chip = parser.parse()
     printed_chip = AST_Printer().print(chip)
+
+    grid = Grid(800, 600, 30, 30)
+    chip_diagram = Chip_Diagram(chip, grid)
+    chip_diagram.draw()
+    chip_diagram.write()
+
 
     # if there was an error, don't compile the file
     if HDLError.had_error:
