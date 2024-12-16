@@ -7,9 +7,13 @@ class Grid:
         self.color = (255, 220, 220)
 
     def x(self, division_x):
+        if division_x < 0:
+            division_x += self.divisions_x
         return self.width / self.divisions_x * division_x
 
     def y(self, division_y):
+        if division_y < 0:
+            division_y += self.divisions_y
         return self.height / self.divisions_y * division_y
 
     def point(self, division_x, division_y):
