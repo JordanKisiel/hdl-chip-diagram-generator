@@ -69,7 +69,11 @@ class Chip_Diagramer(Vistor):
             #  -figure out how to round this width to the nearest width
             #  divisible by grid divisions
             part_left = left + parts_section_width / 2 - part_width / 2 
+            left_rounding = part_left % self.diagram.grid.x(1)
+            part_left -= left_rounding
             part_right = left + parts_section_width / 2 + part_width / 2
+            right_rounding = self.diagram.grid.x(1) - (part_right % self.diagram.grid.x(1))
+            part_right += right_rounding
             part = Part([(part_left, part_top), (part_right, part_bottom)], part_name)
             self.diagram.add(part)
 
@@ -79,7 +83,12 @@ class Chip_Diagramer(Vistor):
         #   the inputs and outputs
         #     -in order to know which connection is an input and output, I would
         #     have to peek inside the part's chip definition header
-        #       -add primitive chip definition files (which ones?)
+        #       -for primitive chips I can use the lexer to break them into valid tokens
+        #       but I don't think there's a need to construct a syntax tree as I just
+        #       assume they're correct
+        #           -instead I should just use a lookup table to see their inputs
+        #           and outputs
+        #               -this will also help me identify which parts are primitive
         #       -start thinking about a chip decomposition tree or chip lookup table
 
 
