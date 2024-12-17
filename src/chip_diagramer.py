@@ -3,9 +3,10 @@ from src.diagram import *
 from PIL import Image, ImageDraw, ImageFont
 
 class Chip_Diagramer(Vistor):
-    def __init__(self, chip_spec, diagram):
+    def __init__(self, chip_spec, diagram, primitive_chips):
         self.chip_spec = chip_spec 
         self.diagram = diagram
+        self.primitive_chips = primitive_chips
         self.outline_top = 4
         self.outline_right = -4
         self.outline_bottom = -4

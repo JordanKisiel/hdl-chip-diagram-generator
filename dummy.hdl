@@ -1,4 +1,4 @@
-CHIP Foo {
+CHIP Dummy {
 
 IN in1, in2; 
 OUT out;
