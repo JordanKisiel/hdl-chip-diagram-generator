@@ -14,7 +14,7 @@ class Chip_Diagramer(Vistor):
         self.parts_right = -8
         self.parts_bottom = -8
         self.parts_left = 8
-        self.part_aspect = 16 / 9
+        self.part_aspect = 4 / 3 
         
     def write(self):
         self.diagram.write(f"{self.chip_spec.ident_token.lexeme}_diagram.png") 
@@ -46,9 +46,9 @@ class Chip_Diagramer(Vistor):
         right = self.diagram.grid.x(self.parts_right)
         bottom = self.diagram.grid.y(self.parts_bottom)
         left = self.diagram.grid.x(self.parts_left)
-        parts_section_height = bottom - top
-        parts_section_width = right - left
         parts_margin = self.diagram.grid.y(1) / len(parts_list) 
+        part_height = (bottom - top) / len(parts_list) - (2 * parts_margin)
+        part_width = part_height * self.part_aspect
 
         for index, part_name in enumerate(parts_list):
             if index == 0:
@@ -61,19 +61,15 @@ class Chip_Diagramer(Vistor):
                 top_margin = parts_margin * 2
                 bottom_margin = 0
 
-            part_top = top + index * parts_section_height / len(parts_list) + top_margin
-            part_bottom = top + (index + 1) * parts_section_height / len(parts_list) - bottom_margin
-            part_height = part_bottom - part_top
-            part_width = part_height * self.part_aspect
-            #TODO:
-            #  -figure out how to round this width to the nearest width
-            #  divisible by grid divisions
-            part_left = left + parts_section_width / 2 - part_width / 2 
-            left_rounding = part_left % self.diagram.grid.x(1)
-            part_left -= left_rounding
-            part_right = left + parts_section_width / 2 + part_width / 2
-            right_rounding = self.diagram.grid.x(1) - (part_right % self.diagram.grid.x(1))
-            part_right += right_rounding
+            if len(parts_list) == 1:
+                bottom_margin = 0
+
+            part_top = top + index * (bottom - top) / len(parts_list) + top_margin
+            part_bottom = top + (index + 1) * (bottom - top) / len(parts_list) - bottom_margin
+            part_left = left + (right - left) / 2 - part_width / 2 
+            part_left = self._snap(part_left, self.diagram.grid.x(1), snap_lower=True)
+            part_right = left + (right - left) / 2 + part_width / 2
+            part_right = self._snap(part_right, self.diagram.grid.x(1), snap_lower=False)
             part = Part([(part_left, part_top), (part_right, part_bottom)], part_name)
             self.diagram.add(part)
 
@@ -159,6 +155,25 @@ class Chip_Diagramer(Vistor):
 
     def visit_range(self, rule):
         pass
+
+    # helper methods
+    # --------------------------------------------
+
+    def _snap(self, value, div_value, snap_lower):
+        threshold = 0.001
+        divisions = value / div_value 
+        fractional = divisions % 1
+        if fractional < threshold:
+            return value
+        if 1 - fractional < threshold:
+            return value
+        
+        if snap_lower:
+            rounding = value % div_value 
+            return value - rounding
+        else:
+            rounding = 1 - (value % div_value)
+            return value + rounding
 
 
 class Chip_IO(Diagrammable):

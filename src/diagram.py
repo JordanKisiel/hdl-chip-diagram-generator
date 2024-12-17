@@ -11,8 +11,7 @@ class Diagram:
                      "font": "FreeMono.ttf",
                      "base_font_size": 32,
                      "stroke_width": 2,
-                     "box_radius_factor": 0.05,
-                     "optical_center_adj": -7
+                     "box_radius_factor": 0.05
                  }):
         self.grid = grid
         self.style = style 
@@ -94,9 +93,10 @@ class Box(Diagrammable):
                 font_size = self.diagram.style["base_font_size"]
             box_font = ImageFont.truetype(self.diagram.style["font"],
                                           font_size)
-            
+
+            optical_center_adj = self.center_y * -0.02 
             self.diagram.draw_context.text((self.center_x, 
-                                            self.center_y + self.diagram.style["optical_center_adj"]),
+                                            self.center_y + optical_center_adj),
                                            self.text,
                                            fill=self.diagram.style["fg"],
                                            font=box_font,

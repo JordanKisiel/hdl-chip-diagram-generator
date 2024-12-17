@@ -5,6 +5,6 @@ OUT out;
 
 PARTS:
 And(a=in1, b=in2, out=out);
-Not(a=in, out=out);
 Or(a=in1, b=in2, out=out);
+Not(a=in1, out=out);
 }
