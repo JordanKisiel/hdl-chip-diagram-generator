@@ -1,6 +1,8 @@
 import os
 from src.lexer import *
 from src.parser import *
+from src.primitive_parser import *
+from src.token_types import *
 
 class Chip_Loader:
     def __init__(self):
@@ -30,7 +32,7 @@ class Chip_Loader:
             if os.path.isfile(file_path) and is_hdl:
                 chip_name = file.split('.')[0]
                 with open(file_path, 'r') as chip_source:
-                    chip = self.source_to_chip(chip_source)
+                    chip = self.source_to_primitive(chip_source)
                     self.primitives[chip_name] = chip
 
     def source_to_chip(self, chip_source):
@@ -40,3 +42,17 @@ class Chip_Loader:
         parser = Parser(tokens)
         chip = parser.parse()
         return chip
+
+    def source_to_primitive(self, chip_source):
+        source = chip_source.read()
+        lexer = Lexer(source)
+        tokens = lexer.scan_tokens()
+        parser = Primitive_Parser(tokens)
+        primitive = parser.parse()
+        return primitive
+        # primitive structure
+        # "And": {
+        #          "inputs": ["a", "b"],
+        #          "outputs": ["out"]
+        #      }
+        

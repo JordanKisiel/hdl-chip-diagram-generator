@@ -172,24 +172,7 @@ class Parser:
             return self.advance()
         else:
             self.error = True
-
-    def match_any(self, token_types):
-        for type in token_types:
-            if self.check(type):
-                self.advance()
-                return True
         
-        return False
-    
-    def match_sequence(self, token_type_sequence):
-        for token_type in token_type_sequence:
-            if self.check(token_type):
-                self.advance()
-            else:
-                return False
-        
-        return True
-    
     def check(self, token_type):
         if self.is_at_end():
             return False

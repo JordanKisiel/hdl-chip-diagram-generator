@@ -94,7 +94,7 @@ class Box(Diagrammable):
             box_font = ImageFont.truetype(self.diagram.style["font"],
                                           font_size)
 
-            optical_center_adj = self.center_y * -0.02 
+            optical_center_adj = self.height * -0.1 
             self.diagram.draw_context.text((self.center_x, 
                                             self.center_y + optical_center_adj),
                                            self.text,

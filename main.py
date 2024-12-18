@@ -29,16 +29,15 @@ def compile(source_path, dest_filename):
     if HDLError.had_error:
         sys.exit(65)   
 
-    diagram(chip)
+    diagram(chip, chip_loader.primitives)
     with open(f"compiled_files/{dest_filename}", "w") as dest_file:
         dest_file.write(generated_hdl)
 
 
-def diagram(chip):
+def diagram(chip, primitive_chips):
     grid = Grid(800, 600, 30, 30)
     diagram = Diagram(grid)
-
-    primitive_chips = [] 
+ 
     chip_diagramer = Chip_Diagramer(chip, diagram, primitive_chips)
     chip_diagramer.draw()
     chip_diagramer.write()

@@ -1,4 +1,5 @@
 from src.grammar import *
+from src.primitive_grammar import *
 from src.diagram import *
 from PIL import Image, ImageDraw, ImageFont
 
@@ -71,22 +72,16 @@ class Chip_Diagramer(Vistor):
             part_left = self._snap(part_left, self.diagram.grid.x(1), snap_lower=True)
             part_right = left + (right - left) / 2 + part_width / 2
             part_right = self._snap(part_right, self.diagram.grid.x(1), snap_lower=False)
-            part = Part([(part_left, part_top), (part_right, part_bottom)], part_name)
-            self.diagram.add(part)
 
-        #TODO:
-        # -draw inputs and outputs of parts
-        #   -possible problem: in the connections list I don't distinguish
-        #   the inputs and outputs
-        #     -in order to know which connection is an input and output, I would
-        #     have to peek inside the part's chip definition header
-        #       -for primitive chips I can use the lexer to break them into valid tokens
-        #       but I don't think there's a need to construct a syntax tree as I just
-        #       assume they're correct
-        #           -instead I should just use a lookup table to see their inputs
-        #           and outputs
-        #               -this will also help me identify which parts are primitive
-        #       -start thinking about a chip decomposition tree or chip lookup table
+            io = {
+                "inputs": [],
+                "outputs": []
+            } 
+
+            if part_name.lower() in self.primitive_chips:
+                io = self._get_primitive_io(part_name.lower())
+            part = Part([(part_left, part_top), (part_right, part_bottom)], part_name, io["inputs"], io["outputs"])
+            self.diagram.add(part)
 
 
 
@@ -175,6 +170,26 @@ class Chip_Diagramer(Vistor):
         else:
             rounding = 1 - (value % div_value)
             return value + rounding
+        
+    def _get_primitive_io(self, primitive_name):
+        io = {}
+        inputs = []
+        outputs = []
+
+        prim = self.primitive_chips[primitive_name]
+
+        inputs.append(prim.interface.inputs.chip_io.ident_token.lexeme)
+        for item in prim.interface.inputs.chip_io.extra_io:
+            inputs.append(item.ident_token.lexeme)
+        outputs.append(prim.interface.outputs.chip_io.ident_token.lexeme)
+        for item in prim.interface.outputs.chip_io.extra_io:
+            outputs.append(item.ident_token.lexeme)
+
+        io["inputs"] = inputs
+        io["outputs"] = outputs 
+
+        return io
+
 
 
 class Chip_IO(Diagrammable):
@@ -186,10 +201,14 @@ class Chip_IO(Diagrammable):
 
     def draw(self):
         # draw text
+        input_width = abs(self.x_bounds[0] - self.x_bounds[1])
+        text_width = len(self.name) * self.diagram.style["base_font_size"]
+        scaling_factor = input_width / 4 / text_width
+        font_size = text_width * scaling_factor 
         input_font = ImageFont.truetype(self.diagram.style["font"],
-                                        self.diagram.style["base_font_size"] * 0.75)
-        name_pos_x = (abs(self.x_bounds[0] - self.x_bounds[1]) / 2) + self.x_bounds[0]
-        name_pos_y = self.y_position - self.diagram.grid.x(1) * 0.75  
+                                        font_size)
+        name_pos_x = input_width / 2 + self.x_bounds[0]
+        name_pos_y = self.y_position - font_size  
         self.diagram.draw_context.text((name_pos_x, name_pos_y),
                                        self.name,
                                        fill=self.diagram.style["fg"],
@@ -204,15 +223,49 @@ class Chip_IO(Diagrammable):
                                          width=self.diagram.style["stroke_width"])
         
 class Part(Diagrammable):
-    def __init__(self, bounds, text):
+    def __init__(self, bounds, text, input_names, output_names):
         self.bounds = bounds
         self.text = text
         self.box = Box(bounds, text)
+        self.input_names = input_names 
+        self.output_names = output_names
+        self.inputs = []
+        self.outputs = []
         self.diagram = None
 
     def draw(self):
         self.box.draw()
 
+        for input in self.inputs:
+            input.draw()
+
+        for output in self.outputs:
+            output.draw()
+        
     def add_to_diagram(self, diagram):
         self.diagram = diagram
         self.box.diagram = diagram 
+
+        left = self.bounds[0][0]
+        top = self.bounds[0][1]
+        right = self.bounds[1][0]
+        bottom = self.bounds[1][1]
+        for index, input_name in enumerate(self.input_names):
+            y_pos = ((index + 1) * abs(top - bottom) / (len(self.input_names) + 1)) + top
+            io_input = (Chip_IO(input_name,
+                                (left - self.diagram.grid.x(2), 
+                                 left),
+                                y_pos))
+            io_input.diagram = diagram
+            self.inputs.append(io_input) 
+
+        for index, output_name in enumerate(self.output_names):
+            y_pos = ((index + 1) * abs(top - bottom) / (len(self.output_names) + 1)) + top
+            io_output = (Chip_IO(output_name,
+                                (right, 
+                                 right + self.diagram.grid.x(2)),
+                                y_pos))
+            io_output.diagram = diagram
+            self.outputs.append(io_output) 
+
+        
