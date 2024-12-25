@@ -1,12 +1,10 @@
 import sys
-from src.lexer import Lexer
-from src.parser import Parser
-from src.grammar import *
+from src.parsers.grammar import *
 from src.ast_printer import *
 from src.hdl_error import HDLError
-from src.chip_diagramer import Chip_Diagramer
-from src.diagram import Diagram
-from src.grid import Grid
+from src.diagram.chip_diagram import *
+from src.diagram.canvas import Canvas
+from src.diagram.grid import Grid
 from src.chip_loader import Chip_Loader
 
 def main():
@@ -36,11 +34,12 @@ def compile(source_path, dest_filename):
 
 def diagram(chip, primitive_chips):
     grid = Grid(800, 600, 30, 30)
-    diagram = Diagram(grid)
- 
-    chip_diagramer = Chip_Diagramer(chip, diagram, primitive_chips)
-    chip_diagramer.draw()
-    chip_diagramer.write()
+    canvas = Canvas(grid.width, grid.height)
+    canvas.set_grid(grid)
+    chip_diagram = Chip_Diagram(canvas, primitive_chips)
+    chip_diagram.diagram(chip)
+
+    chip_diagram.write()
 
 
 if __name__ == "__main__":

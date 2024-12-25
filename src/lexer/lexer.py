@@ -1,6 +1,6 @@
 import re
-from src.hdl_token import Token
-from src.token_types import TokenType, token_types
+from src.lexer.hdl_token import Token
+from src.lexer.token_types import TokenType, token_types
 from src.hdl_error import HDLError
 
 class Lexer:

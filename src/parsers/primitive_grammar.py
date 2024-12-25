@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from src.grammar import Grammar_Rule
+from src.parsers.grammar import Grammar_Rule
 
 class Chip_Spec(Grammar_Rule):
     def __init__(self,

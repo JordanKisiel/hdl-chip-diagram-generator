@@ -1,5 +1,4 @@
 from enum import Enum
-from src.hdl_token import Token
 
 TokenType = Enum("TokenType",
              [

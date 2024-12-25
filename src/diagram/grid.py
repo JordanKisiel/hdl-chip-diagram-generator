@@ -27,20 +27,3 @@ class Grid:
     
     def center(self):
         return (self.center_x(), self.center_y()) 
-
-    
-    def draw(self, draw_context):
-        # draw horizontal lines
-        for n in range(1, self.divisions_y):
-            draw_context.line([(0, self.height / self.divisions_y * n), 
-                                    (self.width, self.height / self.divisions_y * n)], 
-                                    self.color,
-                                    width=2)
-        # draw vertical lines
-        for n in range(1, self.divisions_x):
-            draw_context.line([(self.width / self.divisions_x * n, 0), 
-                                    (self.width / self.divisions_x * n, self.height)], 
-                                    self.color, 
-                                    width=2)
-            
-    

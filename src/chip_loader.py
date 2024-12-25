@@ -1,8 +1,8 @@
 import os
-from src.lexer import *
-from src.parser import *
-from src.primitive_parser import *
-from src.token_types import *
+from src.lexer.lexer import *
+from src.parsers.parser import *
+from src.parsers.primitive_parser import *
+from src.lexer.token_types import *
 
 class Chip_Loader:
     def __init__(self):
@@ -50,9 +50,5 @@ class Chip_Loader:
         parser = Primitive_Parser(tokens)
         primitive = parser.parse()
         return primitive
-        # primitive structure
-        # "And": {
-        #          "inputs": ["a", "b"],
-        #          "outputs": ["out"]
-        #      }
+        
         

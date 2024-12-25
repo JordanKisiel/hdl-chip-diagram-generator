@@ -1,4 +1,4 @@
-from src.grammar import * 
+from src.parsers.grammar import * 
 
 class AST_Printer(Vistor):
     strs = []

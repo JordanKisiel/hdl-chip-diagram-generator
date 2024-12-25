@@ -1,5 +1,5 @@
-from src.token_types import *
-from src.grammar import *
+from src.lexer.token_types import *
+from src.parsers.grammar import *
 
 class Parser:
     def __init__(self, tokens):
