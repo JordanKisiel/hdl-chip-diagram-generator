@@ -9,7 +9,7 @@ class Diagrammable(ABC):
         pass
 
     @abstractmethod
-    def layout(self, bounds):
+    def layout(self):
         pass
 
 class Title(Diagrammable):
@@ -188,25 +188,33 @@ class Part(Diagrammable):
                      anchor="mt")
 
 class Connection(Diagrammable):
-    def __init__(self, diagram, point1, point2):
+    def __init__(self, diagram):
         self.diagram = diagram
+        self.point1 = None
+        self.point2 = None
+        self.center_x = None
+
+    def layout(self, point1, point2):
         self.point1 = point1
         self.point2 = point2
         self.center_x = abs(point1[0] - point2[0]) / 2
 
-    def layout(self, bounds):
-        self.bounds = bounds
-
     def draw(self):
+        assert(self.point1 != None)
+        assert(self.point2 != None)
+
         context = self.diagram.canvas.context
         style = self.diagram.canvas.style
 
-        context.line([self.point1, (self.center_x, self.point1[1])],
+        context.line([self.point1, 
+                      (self.center_x, self.point1[1])],
                      fill=style["fg"],
                      width=style["stroke_width"])
-        context.line([(self.center_x, self.point1[1]), (self.center_x, self.point2[1])],
+        context.line([(self.center_x, self.point1[1]), 
+                      (self.center_x, self.point2[1])],
                      fill=style["fg"],
                      width=style["stroke_width"])
-        context.line([(self.center_x, self.point2[1]), self.point2],
+        context.line([(self.center_x, self.point2[1]), 
+                      self.point2],
                      fill=style["fg"],
                      width=style["stroke_width"])
