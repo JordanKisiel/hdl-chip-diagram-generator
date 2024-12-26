@@ -1,10 +1,10 @@
 CHIP Dummy {
 
-IN in1, in2; 
-OUT out;
+IN in1, in2, in3; 
+OUT out1, out2;
 
 PARTS:
 And(a=in1, b=in2, out=out);
-Or(a=in1, b=in2, out=out);
-Not(a=in1, out=out);
+And(a=in1, b=in2, out=out);
+And(a=in1, b=in2, out=out);
 }

@@ -15,7 +15,6 @@ class Chip_Diagram(Vistor):
         self.connections = []
         self.margin = 4
         self.title_margin = 1.5
-        self.parts_margin = 3 + self.margin
         self.io_width = 3
 
     def diagram(self, chip_ast):
@@ -26,6 +25,10 @@ class Chip_Diagram(Vistor):
     def layout(self):
         assert(self.title != None)
         assert(self.outline != None)
+
+        min_parts_margin = self.margin + 2
+        dynamic_parts_margin = self.margin + 6 - len(self.parts)
+        parts_margin = max(min_parts_margin, dynamic_parts_margin)
 
         grid = self.canvas.grid
         
@@ -54,10 +57,10 @@ class Chip_Diagram(Vistor):
                                           grid.x(self.io_width)),
                                   self.outputs)
         
-        Chip_Layout.distribute_parts(Bounds(grid.y(self.parts_margin),
-                                            grid.x(self.parts_margin),
-                                            grid.y(-self.parts_margin),
-                                            grid.x(-self.parts_margin)),
+        Chip_Layout.distribute_parts(Bounds(grid.y(parts_margin),
+                                            grid.x(parts_margin),
+                                            grid.y(-parts_margin),
+                                            grid.x(-parts_margin)),
                                     self.parts,
                                     grid.y(1),
                                     grid.x(1))
@@ -111,9 +114,9 @@ class Chip_Diagram(Vistor):
         self.outline = Outline(self)
         
         input_list = rule.chip_io_1.accept(self)
-        self.inputs = [IO(self, input_name) for input_name in input_list]
+        self.inputs = [IO(self, input_name, connect_left=False) for input_name in input_list]
         output_list = rule.chip_io_2.accept(self)
-        self.outputs = [IO(self, output_name) for output_name in output_list]
+        self.outputs = [IO(self, output_name, connect_left=True) for output_name in output_list]
 
     def visit_chip_io(self, rule):
         io_list = []

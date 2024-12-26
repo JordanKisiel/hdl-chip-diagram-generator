@@ -60,21 +60,17 @@ class Outline(Diagrammable):
                                   width=style["stroke_width"])
         
 class IO(Diagrammable):
-    def __init__(self, diagram, name):
+    def __init__(self, diagram, name, connect_left=True):
         self.diagram = diagram
         self.name = name
         self.bounds = None
         self.name_pos = (0, 0)
         self.font_size = 0
+        self.connect_left = connect_left
 
     def layout(self, bounds):
-        style = self.diagram.canvas.style
-
         self.bounds = bounds 
-        text_width = len(self.name) * style["base_font_size"]
-        # TODO: FIGURE OUT WHAT THIS MAGIC NUMBER IS
-        scaling_factor = self.bounds.width / 4 / text_width
-        self.font_size = text_width * scaling_factor
+        self.font_size = self.bounds.width / 3 
         self.name_pos = (self.bounds.center_x, 
                          self.bounds.bottom - self.font_size)
 
@@ -96,6 +92,14 @@ class IO(Diagrammable):
                       self.bounds.bottom_right],
                      fill=style["fg"],
                      width=style["stroke_width"])
+        
+    def get_connection_point(self):
+        assert(self.bounds != None)
+
+        if self.connect_left:
+            return self.bounds.bottom_left
+        else:
+            return self.bounds.bottom_right
 
 class Part(Diagrammable):
     def __init__(self, diagram, name, input_names, output_names):
@@ -109,8 +113,8 @@ class Part(Diagrammable):
         self.name_y_pos = 0
         self.input_names = input_names 
         self.output_names = output_names 
-        self.inputs = self._create_io(self.input_names)
-        self.outputs = self._create_io(self.output_names)
+        self.inputs = self._create_io(self.input_names, connect_left=True)
+        self.outputs = self._create_io(self.output_names, connect_left=False)
         self.outline = Outline(self.diagram)
         self.bounds = None
 
@@ -146,10 +150,10 @@ class Part(Diagrammable):
         if self.font_size > style["base_font_size"]:
             self.font_size = style["base_font_size"]
 
-    def _create_io(self, io_list):
+    def _create_io(self, io_list, connect_left=True):
         lst = []
         for io_name in io_list:
-            lst.append(IO(self.diagram, io_name))
+            lst.append(IO(self.diagram, io_name, connect_left))
 
         return lst
 
@@ -182,3 +186,27 @@ class Part(Diagrammable):
                      fill=style["fg"],
                      font=name_font,
                      anchor="mt")
+
+class Connection(Diagrammable):
+    def __init__(self, diagram, point1, point2):
+        self.diagram = diagram
+        self.point1 = point1
+        self.point2 = point2
+        self.center_x = abs(point1[0] - point2[0]) / 2
+
+    def layout(self, bounds):
+        self.bounds = bounds
+
+    def draw(self):
+        context = self.diagram.canvas.context
+        style = self.diagram.canvas.style
+
+        context.line([self.point1, (self.center_x, self.point1[1])],
+                     fill=style["fg"],
+                     width=style["stroke_width"])
+        context.line([(self.center_x, self.point1[1]), (self.center_x, self.point2[1])],
+                     fill=style["fg"],
+                     width=style["stroke_width"])
+        context.line([(self.center_x, self.point2[1]), self.point2],
+                     fill=style["fg"],
+                     width=style["stroke_width"])
