@@ -188,33 +188,50 @@ class Part(Diagrammable):
                      anchor="mt")
 
 class Connection(Diagrammable):
-    def __init__(self, diagram):
+    def __init__(self, diagram, io_1, io_2):
         self.diagram = diagram
+        self.io_1= io_1 
+        self.io_2= io_2 
         self.point1 = None
         self.point2 = None
-        self.center_x = None
+        self.zag_fraction = None
+        self.zag_point = None
 
-    def layout(self, point1, point2):
-        self.point1 = point1
-        self.point2 = point2
-        self.center_x = abs(point1[0] - point2[0]) / 2
+    def layout(self, zag_fraction):
+        self.point1 = self.io_1.get_connection_point()
+        self.point2 = self.io_2.get_connection_point()
+        left_point = min(self.point1[0], self.point2[0])
+        self.zag_fraction = zag_fraction
+        self.zag_point = (abs(self.point1[0] - self.point2[0]) 
+                          * self.zag_fraction + left_point)
 
     def draw(self):
-        assert(self.point1 != None)
-        assert(self.point2 != None)
+        assert(self.point1 != None and self.point2 != None)
+        assert(self.zag_point != None)
 
+        self._draw_zig_zag_line()
+
+    def _draw_straight_line(self):
+        context = self.diagram.canvas.context
+        style = self.diagram.canvas.style
+
+        context.line([self.point1, self.point2],
+                     fill=style["fg"],
+                     width=style["stroke_width"])
+    
+    def _draw_zig_zag_line(self):
         context = self.diagram.canvas.context
         style = self.diagram.canvas.style
 
         context.line([self.point1, 
-                      (self.center_x, self.point1[1])],
+                      (self.zag_point, self.point1[1])],
                      fill=style["fg"],
                      width=style["stroke_width"])
-        context.line([(self.center_x, self.point1[1]), 
-                      (self.center_x, self.point2[1])],
+        context.line([(self.zag_point, self.point1[1]), 
+                      (self.zag_point, self.point2[1])],
                      fill=style["fg"],
                      width=style["stroke_width"])
-        context.line([(self.center_x, self.point2[1]), 
+        context.line([(self.zag_point, self.point2[1]), 
                       self.point2],
                      fill=style["fg"],
                      width=style["stroke_width"])

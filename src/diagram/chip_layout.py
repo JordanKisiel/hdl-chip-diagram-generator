@@ -64,6 +64,11 @@ class Chip_Layout:
 
             part.layout(Bounds(part_top, part_left, part_bottom, part_right))
 
+    def distribute_connections(connections):
+        for index, connection in enumerate(connections):
+            zag_fraction= (1 + index) / (1 + len(connections))
+            connection.layout(zag_fraction)
+
     def _snap(value, div_value, snap_lower=True):
         threshold = 0.001
         divisions = value / div_value

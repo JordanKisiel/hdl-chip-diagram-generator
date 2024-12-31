@@ -4,7 +4,7 @@ IN in1, in2, in3;
 OUT out1, out2;
 
 PARTS:
-And(a=in1, b=in2, out=out);
-And(a=in1, b=in2, out=out);
-And(a=in1, b=in2, out=out);
+Not(a=in1, out=out1);
+Not(a=in2, out=out2);
+Not(a=in3, out=out2);
 }

@@ -11,6 +11,7 @@ class Chip_Diagram(Vistor):
         self.outline = None
         self.inputs = []
         self.outputs = []
+        self.internal_pins = []
         self.parts = []
         self.connections = []
         self.margin = 4
@@ -64,6 +65,9 @@ class Chip_Diagram(Vistor):
                                     self.parts,
                                     grid.y(1),
                                     grid.x(1))
+        
+        Chip_Layout.distribute_connections(self.connections) 
+
 
     def draw(self):
         self.canvas.draw_grid()
@@ -76,9 +80,8 @@ class Chip_Diagram(Vistor):
             output.draw()
         for part in self.parts:
             part.draw()
-        # for now we don't have connections
-        # for connection in self.connections:
-        #     connection.draw()
+        for connection in self.connections:
+            connection.draw()
 
     def write(self):
         assert(self.title != None)
@@ -102,6 +105,27 @@ class Chip_Diagram(Vistor):
         io["outputs"] = outputs 
 
         return io
+    
+    def _get_chip_io_by_name(self, name):
+        io_lst = self.inputs + self.outputs
+        matching_io = filter(lambda x: x.name == name, io_lst)
+        matching_io = list(matching_io)
+        # asserting that io names should be unique
+        # and that we're searching for name that should match something
+        assert(len(matching_io) == 1)
+
+        return matching_io[0]
+    
+    def _get_part_io_by_name(self, part, name):
+        io_lst = part.inputs + part.outputs
+        matching_io = filter(lambda x: x.name == name, io_lst)
+        matching_io = list(matching_io)
+        # asserting that io names should be unique
+        # and that we're searching for name that should match something
+        assert(len(matching_io) == 1)
+
+        return matching_io[0] 
+    
 
     # Visitor Methods
     # ---------------------------------------------------
@@ -114,9 +138,11 @@ class Chip_Diagram(Vistor):
         self.outline = Outline(self)
         
         input_list = rule.chip_io_1.accept(self)
-        self.inputs = [IO(self, input_name, connect_left=False) for input_name in input_list]
+        self.inputs = [IO(self, input_name, connect_left=False) 
+                       for input_name in input_list]
         output_list = rule.chip_io_2.accept(self)
-        self.outputs = [IO(self, output_name, connect_left=True) for output_name in output_list]
+        self.outputs = [IO(self, output_name, connect_left=True) 
+                        for output_name in output_list]
 
     def visit_chip_io(self, rule):
         io_list = []
@@ -156,10 +182,29 @@ class Chip_Diagram(Vistor):
         if part_name.lower() in self.primitive_chips:
             io = self._get_primitive_io(part_name.lower())
 
-        return Part(self, 
-                    rule.ident_token.lexeme,
-                    io["inputs"],
+        part = Part(self, 
+                    rule.ident_token.lexeme, 
+                    io["inputs"], 
                     io["outputs"])
+
+        connections = rule.connections_list.accept(self)
+
+        for connection in connections:
+            io_1 = self._get_chip_io_by_name(connection["chip_connect"])
+            io_2 = self._get_part_io_by_name(part, connection["part_connect"])
+
+            # if the chip connection is an output (and therefore
+            # connects left) then swap the order of the args
+            # to prevent drawing error that occurs if the
+            # connections aren't drawn from a consistent direction
+            if io_1.connect_left:
+                temp = io_1
+                io_1 = io_2
+                io_2 = temp
+
+            self.connections.append(Connection(self, io_1, io_2))
+
+        return part
         
     def visit_connections_list(self, rule):
         connect_1 = rule.connect_1.accept(self)
@@ -177,8 +222,11 @@ class Chip_Diagram(Vistor):
             ident_or_sub_bus = rule.ident_or_sub_bus.accept(self)
         else:
             ident_or_sub_bus = rule.ident_or_sub_bus.lexeme
-        
-        return (ident_or_sub_bus, rule.ident_or_binary_val.lexeme)
+
+        return {
+            "part_connect": ident_or_sub_bus, 
+            "chip_connect": rule.ident_or_binary_val.lexeme
+        }
          
     def visit_extra_connection(self, rule):
         return rule.connection.accept(self) 
