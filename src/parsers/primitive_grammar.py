@@ -1,4 +1,31 @@
+from abc import ABC, abstractmethod
 from src.parsers.grammar import Grammar_Rule
+
+class Vistor(ABC):
+    @abstractmethod
+    def visit_chip_spec(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_interface(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_inputs(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_outputs(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_chip_io(grammar_rule):
+        pass
+
+    @abstractmethod
+    def visit_extra_io(grammar_rule):
+        pass
+
 
 class Chip_Spec(Grammar_Rule):
     def __init__(self,

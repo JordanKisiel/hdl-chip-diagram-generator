@@ -2,11 +2,13 @@ from src.parsers.grammar import *
 from src.diagram.bounds import Bounds
 from src.diagram.diagrammables import *
 from src.diagram.chip_layout import Chip_Layout
+from src.visitors.interface_getter import *
 
 class Chip_Diagram(Vistor):
-    def __init__(self, canvas, primitive_chips):
+    def __init__(self, canvas, primitive_chips, custom_chips):
         self.canvas = canvas
         self.primitive_chips = primitive_chips
+        self.custom_chips = custom_chips
         self.title = None
         self.outline = None
         self.inputs = []
@@ -87,25 +89,6 @@ class Chip_Diagram(Vistor):
         assert(self.title != None)
         self.canvas.out.save(f"{self.title.text}_Chip.png")
 
-    def _get_primitive_io(self, primitive_name):
-        io = {}
-        inputs = []
-        outputs = []
-
-        prim = self.primitive_chips[primitive_name]
-
-        inputs.append(prim.interface.inputs.chip_io.ident_token.lexeme)
-        for item in prim.interface.inputs.chip_io.extra_io:
-            inputs.append(item.ident_token.lexeme)
-        outputs.append(prim.interface.outputs.chip_io.ident_token.lexeme)
-        for item in prim.interface.outputs.chip_io.extra_io:
-            outputs.append(item.ident_token.lexeme)
-
-        io["inputs"] = inputs
-        io["outputs"] = outputs 
-
-        return io
-    
     def _get_chip_io_by_name(self, name):
         io_lst = self.inputs + self.outputs
         matching_io = filter(lambda x: x.name == name, io_lst)
@@ -180,7 +163,13 @@ class Chip_Diagram(Vistor):
         }
         
         if part_name.lower() in self.primitive_chips:
-            io = self._get_primitive_io(part_name.lower())
+            prim_io = Primitive_IO_Getter()
+            prim_chip = self.primitive_chips[part_name.lower()]
+            io = prim_io.get_io(prim_chip)
+        elif part_name.lower() in self.custom_chips:
+            custom_io = Chip_IO_Getter()
+            custom_chip = self.custom_chips[part_name.lower()]
+            io = custom_io.get_io(custom_chip)
 
         part = Part(self, 
                     rule.ident_token.lexeme, 

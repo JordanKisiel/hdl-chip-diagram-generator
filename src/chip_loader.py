@@ -21,19 +21,24 @@ class Chip_Loader:
         for file_path in file_paths:
             self.load_chip(file_path)
 
-    def load_primitives(self, primitives_file_path):
+    def load_chip_folder(self, chips_file_path, is_primitives=False):
         # load in every file ending with .hdl in
         # the provided file path 
-        listing = os.listdir(primitives_file_path)
+        listing = os.listdir(chips_file_path)
         for file in listing:
             extension = file.split('.')[1]
             is_hdl = extension == "hdl"
-            file_path = f"{primitives_file_path}/{file}"
+            file_path = f"{chips_file_path}/{file}"
             if os.path.isfile(file_path) and is_hdl:
                 chip_name = file.split('.')[0]
                 with open(file_path, 'r') as chip_source:
-                    chip = self.source_to_primitive(chip_source)
-                    self.primitives[chip_name] = chip
+                    chip = None
+                    if is_primitives:
+                        chip = self.source_to_primitive(chip_source)
+                        self.primitives[chip_name] = chip
+                    else:
+                        chip = self.source_to_chip(chip_source)
+                        self.chips[chip_name] = chip
 
     def source_to_chip(self, chip_source):
         source = chip_source.read()
