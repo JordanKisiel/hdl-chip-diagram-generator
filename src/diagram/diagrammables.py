@@ -102,9 +102,10 @@ class IO(Diagrammable):
             return self.bounds.bottom_right
 
 class Part(Diagrammable):
-    def __init__(self, diagram, name, input_names, output_names):
+    def __init__(self, diagram, name, id, input_names, output_names):
         self.diagram = diagram
         self.name = name
+        self.id = id
         self.font_size = 0
         # the amount to adjust the y pos of the name by
         # so that it looks centered optically

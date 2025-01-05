@@ -3,94 +3,150 @@ from src.diagram.bounds import Bounds
 from src.diagram.diagrammables import *
 from src.diagram.chip_layout import Chip_Layout
 from src.visitors.interface_getter import *
+from src.utils import Autoincrementer
 
 class Chip_Diagram(Vistor):
     def __init__(self, canvas, primitive_chips, custom_chips):
         self.canvas = canvas
         self.primitive_chips = primitive_chips
         self.custom_chips = custom_chips
-        self.title = None
-        self.outline = None
-        self.inputs = []
-        self.outputs = []
-        self.internal_pins = []
-        self.parts = []
-        self.connections = []
+        # TODO:
+        # change the code to use chip components
+        # instead of member variables
+        self.chip_data = {
+            "title_text": None,
+            "input_names": [],
+            "output_names": [],
+            "parts_data": [],
+            "connection_data": [],
+            "internal_wires": {}
+        }
+
+        self.components = {
+            "title": None,
+            "outline": None,
+            "inputs": [],
+            "outputs": [],
+            "parts": [],
+            "connections": []
+        }
+
         self.margin = 4
         self.title_margin = 1.5
         self.io_width = 3
+        self.part_id_generator = Autoincrementer()
 
     def diagram(self, chip_ast):
         chip_ast.accept(self)
+        self.generate()
         self.layout()
         self.draw()
 
+    def generate(self):
+        self.components["title"] = Title(self, self.chip_data["title_text"])
+        self.components["outline"] = Outline(self)
+        self.components["inputs"]= [IO(self, input_name, connect_left=False) 
+                       for input_name in self.chip_data["input_names"]]
+        self.components["outputs"] = [IO(self, output_name, connect_left=True) 
+                        for output_name in self.chip_data["output_names"]]
+        self.components["parts"] = [Part(self, 
+                           part["name"], 
+                           part["id"], 
+                           part["inputs"], 
+                           part["outputs"]) 
+                      for part in self.chip_data["parts_data"]]
+
+        self._generate_internal_wire_associations()
+        
+        for connection in self.chip_data["connection_data"]:
+            part = self._get_part_by_id(connection["part_id"])
+            io_1 = self._get_part_io_by_name(part, connection["part_pin"])
+            io_2 = None
+            
+            if connection["other_pin"] in self.chip_data["internal_wires"]:
+                pin_data = self.chip_data["internal_wires"][connection["other_pin"]]
+                other_pin_part = self._get_part_by_id(pin_data["part_id"])
+                io_2 = self._get_part_io_by_name(other_pin_part, pin_data["output_pin"]) 
+            elif connection["other_pin"] in (self.chip_data["input_names"] + 
+                                             self.chip_data["output_names"]):
+                io_2 = self._get_chip_io_by_name(connection["other_pin"])
+
+            # connection lines only draw correctly if drawn
+            # left to right, so swap io objects if necessary
+            if io_1.connect_left:
+                temp = io_1
+                io_1 = io_2
+                io_2 = temp
+
+            self.components["connections"].append(Connection(self, io_1, io_2))
+
+
     def layout(self):
-        assert(self.title != None)
-        assert(self.outline != None)
+        assert(self.components["title"] != None)
+        assert(self.components["outline"] != None)
 
         min_parts_margin = self.margin + 2
-        dynamic_parts_margin = self.margin + 6 - len(self.parts)
+        dynamic_parts_margin = self.margin + 6 - len(self.components["parts"])
         parts_margin = max(min_parts_margin, dynamic_parts_margin)
 
         grid = self.canvas.grid
         
-        self.title.layout(Bounds(grid.y(self.title_margin), 
+        self.components["title"].layout(Bounds(grid.y(self.title_margin), 
                                  0, 
                                  self.canvas.height, 
                                  self.canvas.width))
         
-        self.outline.layout(Bounds(grid.y(self.margin),
+        self.components["outline"].layout(Bounds(grid.y(self.margin),
                                    grid.x(self.margin),
                                    grid.y(-self.margin),
                                    grid.x(-self.margin)))
 
         # inputs
-        Chip_Layout.distribute_io(Bounds(self.outline.bounds.top,
-                                         self.outline.bounds.left -
+        Chip_Layout.distribute_io(Bounds(self.components["outline"].bounds.top,
+                                         self.components["outline"].bounds.left -
                                           grid.x(self.io_width),
-                                         self.outline.bounds.bottom,
-                                         self.outline.bounds.left),
-                                  self.inputs)
+                                         self.components["outline"].bounds.bottom,
+                                         self.components["outline"].bounds.left),
+                                  self.components["inputs"])
         # outputs
-        Chip_Layout.distribute_io(Bounds(self.outline.bounds.top,
-                                         self.outline.bounds.right,
-                                         self.outline.bounds.bottom,
-                                         self.outline.bounds.right + 
+        Chip_Layout.distribute_io(Bounds(self.components["outline"].bounds.top,
+                                         self.components["outline"].bounds.right,
+                                         self.components["outline"].bounds.bottom,
+                                         self.components["outline"].bounds.right + 
                                           grid.x(self.io_width)),
-                                  self.outputs)
+                                  self.components["outputs"])
         
         Chip_Layout.distribute_parts(Bounds(grid.y(parts_margin),
                                             grid.x(parts_margin),
                                             grid.y(-parts_margin),
                                             grid.x(-parts_margin)),
-                                    self.parts,
+                                    self.components["parts"],
                                     grid.y(1),
                                     grid.x(1))
         
-        Chip_Layout.distribute_connections(self.connections) 
+        Chip_Layout.distribute_connections(self.components["connections"]) 
 
 
     def draw(self):
         self.canvas.draw_grid()
         
-        self.title.draw()
-        self.outline.draw()
-        for input in self.inputs:
+        self.components["title"].draw()
+        self.components["outline"].draw()
+        for input in self.components["inputs"]:
             input.draw()
-        for output in self.outputs:
+        for output in self.components["outputs"]:
             output.draw()
-        for part in self.parts:
+        for part in self.components["parts"]:
             part.draw()
-        for connection in self.connections:
+        for connection in self.components["connections"]:
             connection.draw()
 
     def write(self):
-        assert(self.title != None)
-        self.canvas.out.save(f"{self.title.text}_Chip.png")
+        assert(self.components["title"] != None)
+        self.canvas.out.save(f"{self.chip_data['title_text']}_Chip.png")
 
     def _get_chip_io_by_name(self, name):
-        io_lst = self.inputs + self.outputs
+        io_lst = self.components["inputs"] + self.components["outputs"]
         matching_io = filter(lambda x: x.name == name, io_lst)
         matching_io = list(matching_io)
         # asserting that io names should be unique
@@ -109,23 +165,51 @@ class Chip_Diagram(Vistor):
 
         return matching_io[0] 
     
+    def _get_part_by_id(self, id):
+        matching_part = filter(lambda x: x.id == id, self.components["parts"])
+        matching_part = list(matching_part)
+
+        # asserting that exactly 1 result
+        # should be retrieved
+        assert(len(matching_part) == 1)
+
+        return matching_part[0]
+
+    def _generate_internal_wire_associations(self):
+        internal_wire_references = []
+        chip_io_names = (self.chip_data["input_names"] + 
+                         self.chip_data["output_names"])
+        for connect_data in self.chip_data["connection_data"]:
+            if connect_data["other_pin"] not in chip_io_names:
+                internal_wire_references.append(connect_data)
+
+        for reference in internal_wire_references:
+            part = self._get_part_by_id(reference["part_id"])
+            if reference["part_pin"] in part.output_names:
+                wire_name = reference["other_pin"]
+                part_id = reference["part_id"]
+                output_pin = reference["part_pin"]
+
+                assert(wire_name not in self.chip_data["internal_wires"])
+
+                self.chip_data["internal_wires"][wire_name] = {
+                    "part_id": part_id, 
+                    "output_pin": output_pin
+                    }
+
+
+
 
     # Visitor Methods
     # ---------------------------------------------------
     def visit_chip_spec(self, rule):
-        self.title = Title(self, rule.ident_token.lexeme)
+        self.chip_data["title_text"] = rule.ident_token.lexeme
         rule.header.accept(self)
         rule.body.accept(self)
 
     def visit_header(self, rule):
-        self.outline = Outline(self)
-        
-        input_list = rule.chip_io_1.accept(self)
-        self.inputs = [IO(self, input_name, connect_left=False) 
-                       for input_name in input_list]
-        output_list = rule.chip_io_2.accept(self)
-        self.outputs = [IO(self, output_name, connect_left=True) 
-                        for output_name in output_list]
+        self.chip_data["input_names"] = rule.chip_io_1.accept(self)
+        self.chip_data["output_names"] = rule.chip_io_2.accept(self)
 
     def visit_chip_io(self, rule):
         io_list = []
@@ -150,13 +234,11 @@ class Chip_Diagram(Vistor):
 
     def visit_body(self, rule):
         for part in rule.parts_list:
-            self.parts.append(part.accept(self))
+            self.chip_data["parts_data"].append(part.accept(self))
         
     def visit_part(self, rule):
         part_name = rule.ident_token.lexeme
-        # for now we only get the io of primitive
-        # chips as those are the only chips we
-        # are using in the dummy hdl chip
+
         io = {
             "inputs": [],
             "outputs": []
@@ -171,27 +253,47 @@ class Chip_Diagram(Vistor):
             custom_chip = self.custom_chips[part_name.lower()]
             io = custom_io.get_io(custom_chip)
 
-        part = Part(self, 
-                    rule.ident_token.lexeme, 
-                    io["inputs"], 
-                    io["outputs"])
+        part_id = self.part_id_generator.get_id()
+
+        part = {
+            "name": part_name,
+            "id": part_id,
+            "inputs": io["inputs"],
+            "outputs": io["outputs"]
+        }
 
         connections = rule.connections_list.accept(self)
 
         for connection in connections:
-            io_1 = self._get_chip_io_by_name(connection["chip_connect"])
-            io_2 = self._get_part_io_by_name(part, connection["part_connect"])
+            self.chip_data["connection_data"].append({"part_id": part_id,
+                                         "part_pin": connection["pin_1"],
+                                         "other_pin": connection["pin_2"]})
 
-            # if the chip connection is an output (and therefore
-            # connects left) then swap the order of the args
-            # to prevent drawing error that occurs if the
-            # connections aren't drawn from a consistent direction
-            if io_1.connect_left:
-                temp = io_1
-                io_1 = io_2
-                io_2 = temp
 
-            self.connections.append(Connection(self, io_1, io_2))
+        # for connection in connections:
+        #     # if I enounter an internal wire (meaning the right side of the
+        #     # connection isn't found in the chip interface) then I need to
+        #     # check if the internal wire has been defined in the
+        #     # self.internal_wires dict
+        #     # if it has not, add it as for example:
+        #     # "w1" => reference to io object
+        #     # and don't add a connection
+        #     # if it has, retrieve the io object and use it as one of the
+        #     # io object in the Connection object constructor
+        #     io_1 = self._get_chip_io_by_name(connection["chip_connect"])
+        #     io_2 = self._get_part_io_by_name(part, connection["part_connect"])
+
+
+        #     # if the chip connection is an output (and therefore
+        #     # connects left) then swap the order of the args
+        #     # to prevent drawing error that occurs if the
+        #     # connections aren't drawn from a consistent direction
+        #     if io_1.connect_left:
+        #         temp = io_1
+        #         io_1 = io_2
+        #         io_2 = temp
+
+        #     self.connections.append(Connection(self, io_1, io_2))
 
         return part
         
@@ -213,8 +315,8 @@ class Chip_Diagram(Vistor):
             ident_or_sub_bus = rule.ident_or_sub_bus.lexeme
 
         return {
-            "part_connect": ident_or_sub_bus, 
-            "chip_connect": rule.ident_or_binary_val.lexeme
+            "pin_1": ident_or_sub_bus, 
+            "pin_2": rule.ident_or_binary_val.lexeme
         }
          
     def visit_extra_connection(self, rule):
