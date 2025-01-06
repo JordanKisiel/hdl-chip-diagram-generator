@@ -2,7 +2,8 @@ import sys
 from src.parsers.grammar import *
 from src.visitors.ast_printer import *
 from src.hdl_error import HDLError
-from src.visitors.chip_diagram import *
+from src.diagram.chip_diagram import *
+from src.visitors.chip_data import Chip_Data
 from src.diagram.canvas import Canvas
 from src.diagram.grid import Grid
 from src.chip_loader import Chip_Loader
@@ -39,8 +40,10 @@ def compile(source_path, dest_filename):
 def diagram(chip, primitive_chips, custom_chips):
     grid = Grid(800, 600, 30, 30)
     canvas = Canvas(grid.width, grid.height)
+    # TODO: do I need a set grid method?
     canvas.set_grid(grid)
-    chip_diagram = Chip_Diagram(canvas, primitive_chips, custom_chips)
+    chip_data = Chip_Data(primitive_chips, custom_chips)
+    chip_diagram = Chip_Diagram(canvas, chip_data)
     chip_diagram.diagram(chip)
 
     chip_diagram.write()
