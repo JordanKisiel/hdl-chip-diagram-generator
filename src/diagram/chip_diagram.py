@@ -14,7 +14,7 @@ class Chip_Diagram:
         self.connections = []
 
         self.measurements = {
-            "margin": 4,
+            "margin": 5,
             "title_margin": 1.5,
             "io_width": 3
         }
@@ -98,12 +98,14 @@ class Chip_Diagram:
                                          self.outline.bounds.right + 
                                           grid.x(self.measurements["io_width"])),
                                   self.outputs)
-        
+
         Chip_Layout.distribute_parts(Bounds(grid.y(parts_margin),
                                             grid.x(parts_margin),
                                             grid.y(-parts_margin),
                                             grid.x(-parts_margin)),
                                     self.parts,
+                                    self.chip_data.connections_data,
+                                    self.chip_data.internal_wires,
                                     grid.y(1),
                                     grid.x(1))
         

@@ -79,13 +79,15 @@ class IO(Diagrammable):
         context = self.diagram.canvas.context
 
         # draw text
-        io_font = ImageFont.truetype(style["font"],
-                                     self.font_size)
-        context.text(self.name_pos,
-                     self.name,
-                     fill=style["fg"],
-                     font=io_font,
-                     anchor="mt")
+        # but only if it's big enough to see
+        if self.font_size >= 5:
+            io_font = ImageFont.truetype(style["font"],
+                                         self.font_size)
+            context.text(self.name_pos,
+                         self.name,
+                         fill=style["fg"],
+                         font=io_font,
+                         anchor="mt")
         
         # draw line
         context.line([self.bounds.bottom_left,
@@ -179,14 +181,17 @@ class Part(Diagrammable):
         context = self.diagram.canvas.context
         style = self.diagram.canvas.style
 
-        name_font = ImageFont.truetype(style["font"],
-                                       self.font_size)
-        
-        context.text((self.bounds.center_x, self.name_y_pos),
-                     self.name,
-                     fill=style["fg"],
-                     font=name_font,
-                     anchor="mt")
+        # draw text
+        # but only if it's big enough to see 
+        if self.font_size >= 5:
+            name_font = ImageFont.truetype(style["font"],
+                                        self.font_size)
+            
+            context.text((self.bounds.center_x, self.name_y_pos),
+                        self.name,
+                        fill=style["fg"],
+                        font=name_font,
+                        anchor="mt")
 
 class Connection(Diagrammable):
     def __init__(self, diagram, io_1, io_2):

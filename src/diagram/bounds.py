@@ -19,3 +19,12 @@ class Bounds:
             raise Exception("Top edge of boundary cannot be below bottom edge.")
         if self.left > self.right:
             raise Exception("Left edge of boundary cannot be to the right of the right edge.")
+        
+    def draw(self, canvas):
+        style = canvas.style
+        context = canvas.context
+
+        context.rectangle(self.full_bounds,
+                          fill=None,
+                          outline=style["fg"],
+                          width=style["stroke_width"])

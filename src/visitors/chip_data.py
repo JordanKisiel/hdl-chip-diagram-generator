@@ -1,5 +1,5 @@
 from src.parsers.grammar import *
-from src.visitors.interface_getter import *
+from src.visitors.interface_data import *
 from src.utils import Autoincrementer
 
 class Chip_Data(Vistor):
