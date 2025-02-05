@@ -38,7 +38,7 @@ def compile(source_path, dest_filename):
 
 
 def diagram(chip, primitive_chips, custom_chips):
-    grid = Grid(800, 600, 30, 30)
+    grid = Grid(800, 600, 32, 32)
     canvas = Canvas(grid.width, grid.height)
     # TODO: do I need a set grid method?
     canvas.set_grid(grid)

@@ -58,14 +58,108 @@ class Chip_Layout:
     # this will be replaced by a pathfinding
     # algo similar to A* but optimizing for
     # fewer bends, distance travelled, distance to target
-    def distribute_connections(connections):
-        for index, connection in enumerate(connections):
-            zag_fraction= (1 + index) / (1 + len(connections))
-            connection.layout(zag_fraction)
+    def distribute_connections(connections, grid):
+        for connection in connections:
+            point_1 = connection.io_1.get_connection_point()
+            to_left_1 = connection.io_1.connect_left
+            point_2 = connection.io_2.get_connection_point()
+            to_left_2 = connection.io_2.connect_left
+            on_grid_point = grid.get_closest_on_grid_x(point_1, 
+                                                       to_left_1)
+            off_grid_point = grid.get_closest_on_grid_x(point_2, 
+                                                        to_left_2)
+            print(f"{connection.io_1.name} to {connection.io_2.name}:")
+            path = Chip_Layout._find_connection_path(on_grid_point, 
+                                                     off_grid_point,
+                                                     grid)
+            
+
+            print(f"first 3 pts: {path[:3]}")
+            print(f"last 2 pts: {path[-2:]}")
+            connection.layout(path)
 
 
     # helper methods
     # -------------------------------------------------------------
+
+    def _find_connection_path(on_grid_point, off_grid_point, grid):
+        paths = []
+        target = off_grid_point
+
+        initial_path = {
+            "points": [on_grid_point],
+            "dist_traveled": 0,
+            "bends": 0,
+            "dist_to_target": math.dist(on_grid_point, off_grid_point),
+            "score": Chip_Layout._score(0, math.dist(on_grid_point, off_grid_point))
+        }
+
+        paths.append(initial_path)
+        current = None
+
+        while len(paths) > 0:
+            current = paths[0]
+            current_end_point = current["points"][-1]
+            found_target_x = (abs(current_end_point[0] - target[0]) <= 
+                              grid.column_width)
+            found_target_y = (abs(current_end_point[1] - target[1]) <=
+                              grid.row_height)
+
+            if found_target_x and found_target_y:
+                print("FOUND TARGET")
+                
+                break
+            
+            # TODO:
+            # -figure out why we're sometimes not finding the target
+            #  -seems to be related to not finding enough neighbors
+            #   -which also may be related to not finding neighbors that haven't
+            #   already been visited
+            neighbors = grid.get_grid_neighbors(current_end_point)
+            print(f"neighbors: {neighbors}")
+            for neighbor in neighbors:
+                if neighbor not in current["points"]:
+                    points = [*current["points"], neighbor]
+                    dist_traveled = current["dist_traveled"] + 1
+                    bends = 0
+                    dist_to_target = math.dist(neighbor, target)
+                    new_path = {
+                        "points": points, 
+                        "dist_traveled": dist_traveled,
+                        "bends": bends,
+                        "dist_to_target": dist_to_target,
+                        "score": Chip_Layout._score(dist_traveled, dist_to_target)
+                    }
+                    paths.append(new_path)
+
+            paths = paths[1:]
+            print(len(paths))
+            paths.sort(key=lambda x: x["score"])
+
+        # TODO:
+        # path finding algorithm
+        # -the on_grid and off_grid points are not
+        #  grid points per se
+        #  -to determine if the current grid point has reached
+        #   the target, the x grid point must be within 1 row_height
+        #   and the y grid point must be within 1 col_width of the
+        #    off_grid_point
+        #     -also accounting for some threshold
+        # -account for the following:
+        #  -part group bounds
+        #  -part collision detection (expand bounds if necessary)
+        #  -bends
+        #    -I think I need to look back two points in the path
+        #     and if both the x and y changed, then increment num_bends
+        #  -distance travelled
+        #  -distance to target
+        # -probably use some variation of the A* algorithm but
+        #  using the above properties to sort my priority queue
+        # print([on_grid_point, *paths[0]["points"], off_grid_point])
+        return [on_grid_point, *current["points"], off_grid_point]
+
+    def _score(dist_traveled, dist_to_target):
+        return dist_traveled + dist_to_target
 
     def _snap(value, div_value, snap_lower=True):
         threshold = 0.001

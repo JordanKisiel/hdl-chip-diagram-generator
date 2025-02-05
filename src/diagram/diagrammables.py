@@ -161,14 +161,14 @@ class Part(Diagrammable):
         return lst
 
     def _layout_io(self, bounds):
-        input_left = bounds.left - (bounds.width / 3)
+        input_left = bounds.left - (bounds.width / 4)
         input_right = bounds.left
         input_group_bounds = Bounds(bounds.top, 
                                     input_left, 
                                     bounds.bottom, 
                                     input_right)
         output_left = bounds.right
-        output_right = bounds.right + (bounds.width / 3)
+        output_right = bounds.right + (bounds.width / 4)
         output_group_bounds = Bounds(bounds.top,
                                      output_left,
                                      bounds.bottom,
@@ -196,48 +196,33 @@ class Part(Diagrammable):
 class Connection(Diagrammable):
     def __init__(self, diagram, io_1, io_2):
         self.diagram = diagram
-        self.io_1= io_1 
-        self.io_2= io_2 
-        self.point1 = None
-        self.point2 = None
-        self.zag_fraction = None
-        self.zag_point = None
+        self.io_1 = io_1 
+        self.io_2 = io_2 
+        self.path = None
 
-    def layout(self, zag_fraction):
+    def layout(self, path):
         self.point1 = self.io_1.get_connection_point()
         self.point2 = self.io_2.get_connection_point()
-        left_point = min(self.point1[0], self.point2[0])
-        self.zag_fraction = zag_fraction
-        self.zag_point = (abs(self.point1[0] - self.point2[0]) 
-                          * self.zag_fraction + left_point)
+        self.path = [self.point1, *path, self.point2]
 
     def draw(self):
-        assert(self.point1 != None and self.point2 != None)
-        assert(self.zag_point != None)
+        assert(self.path != None)
 
-        self._draw_zig_zag_line()
+        self._draw_path()
+
+    def _draw_path(self):
+        context = self.diagram.canvas.context
+        style = self.diagram.canvas.style
+
+        # TODO: also look into giving this rounded corners?
+        context.line(self.path, 
+                     fill=style["fg"], 
+                     width=style["stroke_width"])
 
     def _draw_straight_line(self):
         context = self.diagram.canvas.context
         style = self.diagram.canvas.style
 
         context.line([self.point1, self.point2],
-                     fill=style["fg"],
-                     width=style["stroke_width"])
-    
-    def _draw_zig_zag_line(self):
-        context = self.diagram.canvas.context
-        style = self.diagram.canvas.style
-
-        context.line([self.point1, 
-                      (self.zag_point, self.point1[1])],
-                     fill=style["fg"],
-                     width=style["stroke_width"])
-        context.line([(self.zag_point, self.point1[1]), 
-                      (self.zag_point, self.point2[1])],
-                     fill=style["fg"],
-                     width=style["stroke_width"])
-        context.line([(self.zag_point, self.point2[1]), 
-                      self.point2],
                      fill=style["fg"],
                      width=style["stroke_width"])

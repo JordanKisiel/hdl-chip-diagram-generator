@@ -109,7 +109,7 @@ class Chip_Diagram:
                                     grid.y(1),
                                     grid.x(1))
         
-        Chip_Layout.distribute_connections(self.connections) 
+        Chip_Layout.distribute_connections(self.connections, grid) 
 
 
     def draw(self):

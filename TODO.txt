@@ -1,0 +1,51 @@
+  TODO:
+  -re-work (and test) the grid class to create and use a 2d-array of points
+    -grid.get(0, 0) = (0, 0) # actual pixel values of grid coords
+    -grid.snap_x(point, left=True) # returns point where x has been moved
+      left or right to nearest y-div
+    -grid.snap_y(point, up=True)
+    -grid.snap(point, left=True, up=True)
+    -grid.is_on_grid_x(point) # returns boolean indicating if point x coord
+      is within threshold of a grid x div
+    -grid.is_on_grid_y(point)
+    -grid.is_grid_point(point)
+    -grid.get_neighbors(point) # checks one div away in all directions and
+      returns any of those points that are grid.is_grid_point()
+    -grid.draw(canvas) 
+
+  -re-work canvas to not know about grids
+  -use pathfinding algo to draw connections between the connection points  
+    -first I need to create a function or something that will tell me
+    when I'm inside a part so I can avoid drawing connections through parts
+      -ideally this can be part of the behavior of the boundary object
+    -concern:
+      -it's possible that wires will draw along the same grid lines for long
+      portions of their path which may make it hard to see what's actually
+      happening
+      -maybe I can use the connection point data to avoid using the same
+      grid points and lines
+    -thought:
+      -the start and end connection points won't be on a grid line in most
+      cases, so I'll need to draw a line that connects each point to the
+      grid
+  -create a visitor that draws a tree of the AST
+    -this should be relatively easy (maybe?) and illustrative of why it's called
+    a syntax tree
+  -add error handling and reporting for parser errors
+    -go back to the crafting interpreters book for this but keep in mind
+    that I WILL have a separate error class since I will have more possible
+    errors that can occur
+  -figure out how I want to handle checking other sorts of rules
+    -first review rules to make sure they're categorized the way I want
+    -make the all the parts that have rules associated with them (like the
+    chip graph) first before making some sort of extraneous rule verifier
+      -ideally all the rules for chips would be encoded naturally in parts of
+      the system I'm constructing
+
+  -find relationships between elements (margins, etc.)
+  
+  
+  
+  -SAVE THIS FOR A LATER DATE IF I REALLY WANT TO:
+    -figure out how to recursively expand custom chip parts so that their
+  internals can be drawn in the diagram
