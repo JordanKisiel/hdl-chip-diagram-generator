@@ -12,6 +12,79 @@ class Diagrammable(ABC):
     def layout(self):
         pass
 
+# TODO:
+# -continue on grid class
+class Grid(Diagrammable):
+    def __init__(self, 
+                 width, 
+                 height, 
+                 x_divisions, 
+                 y_divisions):
+        self.width = width
+        self.height = height
+        self.bounds = Bounds(0, 0, height, width)
+        self.x_divisions = x_divisions
+        self.y_divisions = y_divisions
+        self.column_width = self.width / x_divisions
+        self.row_height = self.height / y_divisions
+        self.color = (255, 220, 220)
+        self.on_grid_threshold = 0.001
+        self.grid = self._construct_grid()
+        assert(width > 0)
+        assert(height > 0)
+        assert(x_divisions > 0)
+        assert(y_divisions > 0)
+
+    def _construct_grid(self):
+        grid = []
+        for i in range(self.x_divisions + 1):
+            row = []
+            for j in range(self.y_divisions + 1):
+               x_value = self.column_width * i + self.bounds.left
+               y_value = self.row_height * j + self.bounds.top
+               row.append((x_value, y_value))
+            grid.append(row)
+
+        return grid
+
+    def get(self, x_coord, y_coord):
+        assert(x_coord >= 0)
+        assert(y_coord >= 0)
+        assert(x_coord <= self.x_divisions + 1)
+        assert(y_coord <= self.y_divisions + 1)
+
+        return self.grid[x_coord][y_coord]
+    
+    def layout(self, bounds):
+        self.bounds = bounds
+        self.width = bounds.width
+        self.height = bounds.height
+        self.column_width = self.width / self.x_divisions
+        self.row_height = self.height / self.y_divisions
+
+        self.grid = self._construct_grid()
+
+        print(self.grid)
+    
+    def draw(self, canvas):
+        context = canvas.context
+
+        # draw horizontal lines
+        for n in range(0, self.y_divisions + 1):
+            y_value = self.grid[0][n][1]
+            context.line([(self.bounds.left, y_value),
+                          (self.bounds.right, y_value)],
+                          self.color,
+                          width=2)
+
+        # draw vertical lines
+        for n in range(0, self.x_divisions + 1):
+            x_value = self.grid[n][0][0]
+            context.line([(x_value, self.bounds.top),
+                          (x_value, self.bounds.bottom)],
+                          self.color,
+                          width=2)
+
 class Title(Diagrammable):
     def __init__(self, diagram, text):
         self.diagram = diagram 
