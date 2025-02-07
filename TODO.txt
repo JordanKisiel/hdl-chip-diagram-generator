@@ -14,6 +14,10 @@
     -grid.draw(canvas) 
 
   -re-work canvas to not know about grids
+  -take a second look at the drawing methods and re-work them as necessary to account
+  for the fact that there are no sub-pixels when drawing
+    -due to that fact, I might want to always snap every coordinate passed to a drawing
+  method to the next integer
   -use pathfinding algo to draw connections between the connection points  
     -first I need to create a function or something that will tell me
     when I'm inside a part so I can avoid drawing connections through parts
