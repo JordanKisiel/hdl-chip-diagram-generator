@@ -26,7 +26,7 @@ class Bounds:
 
     def is_inside(self, point):
         return (self.is_inside_x(point) and
-                self.in_inside_y(point)) 
+                self.is_inside_y(point)) 
     
     def is_inside_x(self, point):
         is_inside_left = point[0] >= self.left

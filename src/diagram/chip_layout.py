@@ -1,7 +1,6 @@
 import math
 from src.diagram.bounds import Bounds
 
-
 class Chip_Layout:
     PART_ASPECT = 4 / 3
     MIN_PART_COLS = 3
@@ -64,10 +63,8 @@ class Chip_Layout:
             to_left_1 = connection.io_1.connect_left
             point_2 = connection.io_2.get_connection_point()
             to_left_2 = connection.io_2.connect_left
-            on_grid_point = grid.get_closest_on_grid_x(point_1, 
-                                                       to_left_1)
-            off_grid_point = grid.get_closest_on_grid_x(point_2, 
-                                                        to_left_2)
+            on_grid_point = grid.snap_x(point_1, to_left_1)
+            off_grid_point = grid.snap_x(point_2, to_left_2)
             print(f"{connection.io_1.name} to {connection.io_2.name}:")
             path = Chip_Layout._find_connection_path(on_grid_point, 
                                                      off_grid_point,
@@ -115,7 +112,7 @@ class Chip_Layout:
             #  -seems to be related to not finding enough neighbors
             #   -which also may be related to not finding neighbors that haven't
             #   already been visited
-            neighbors = grid.get_grid_neighbors(current_end_point)
+            neighbors = grid.get_neighbors(current_end_point)
             print(f"neighbors: {neighbors}")
             for neighbor in neighbors:
                 if neighbor not in current["points"]:

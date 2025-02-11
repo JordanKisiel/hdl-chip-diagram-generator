@@ -5,14 +5,13 @@ from src.hdl_error import HDLError
 from src.diagram.chip_diagram import *
 from src.visitors.chip_data import Chip_Data
 from src.diagram.canvas import Canvas
-from src.diagram.grid import Grid
 from src.chip_loader import Chip_Loader
 
 def main():
     # incorrect number of args
     # must equal 3 because first arg is always the name of this script
     if len(sys.argv) != 3:
-        print("Must provide source and destination files. Usage: python3 main.py <hdl source> <python dest>")
+        print("Must provide source and destination files. Usage: python3 main.py <hdl source> <hdl dest>")
         sys.exit(64)
     else:
         compile(sys.argv[1], sys.argv[2])
@@ -38,10 +37,7 @@ def compile(source_path, dest_filename):
 
 
 def diagram(chip, primitive_chips, custom_chips):
-    grid = Grid(800, 600, 32, 32)
-    canvas = Canvas(grid.width, grid.height)
-    # TODO: do I need a set grid method?
-    canvas.set_grid(grid)
+    canvas = Canvas(800, 600)
     chip_data = Chip_Data(primitive_chips, custom_chips)
     chip_diagram = Chip_Diagram(canvas, chip_data)
     chip_diagram.diagram(chip)

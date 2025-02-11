@@ -1,10 +1,16 @@
 from src.diagram.bounds import Bounds
-from src.diagram.diagrammables import *
+from src.diagram.diagrammables.grid import Grid
+from src.diagram.diagrammables.title import Title
+from src.diagram.diagrammables.outline import Outline
+from src.diagram.diagrammables.io import IO
+from src.diagram.diagrammables.part import Part
+from src.diagram.diagrammables.connection import Connection
 from src.diagram.chip_layout import Chip_Layout
 
 class Chip_Diagram:
     def __init__(self, canvas, chip_data):
         self.canvas = canvas
+        self.grid = Grid(canvas.width, canvas.height, 32, 32)
         self.chip_data = chip_data
         self.title = None
         self.outline = None
@@ -15,7 +21,7 @@ class Chip_Diagram:
 
         self.measurements = {
             "margin": 5,
-            "title_margin": 1.5,
+            "title_margin": 2,
             "io_width": 3
         }
 
@@ -26,14 +32,13 @@ class Chip_Diagram:
         self.draw()
 
     def generate(self):
-        self.title = Title(self, self.chip_data.title_text)
-        self.outline = Outline(self)
-        self.inputs = [IO(self, input_name, connect_left=False) 
+        self.title = Title(self.chip_data.title_text)
+        self.outline = Outline()
+        self.inputs = [IO(input_name, connect_left=False) 
                        for input_name in self.chip_data.input_names]
-        self.outputs = [IO(self, output_name, connect_left=True) 
+        self.outputs = [IO(output_name, connect_left=True) 
                         for output_name in self.chip_data.output_names]
-        self.parts = [Part(self, 
-                           part["name"], 
+        self.parts = [Part(part["name"], 
                            part["id"], 
                            part["inputs"], 
                            part["outputs"]) 
@@ -59,7 +64,7 @@ class Chip_Diagram:
                 io_1 = io_2
                 io_2 = temp
 
-            self.connections.append(Connection(self, io_1, io_2))
+            self.connections.append(Connection(io_1, io_2))
 
 
     def layout(self):
@@ -71,23 +76,23 @@ class Chip_Diagram:
                                 6 - 
                                 len(self.parts))
         parts_margin = max(min_parts_margin, dynamic_parts_margin)
-
-        grid = self.canvas.grid
         
-        self.title.layout(Bounds(grid.y(self.measurements["title_margin"]), 
+        self.title.layout(Bounds(self.grid.div_y(self.measurements["title_margin"]), 
                                  0, 
                                  self.canvas.height, 
                                  self.canvas.width))
-        
-        self.outline.layout(Bounds(grid.y(self.measurements["margin"]),
-                                   grid.x(self.measurements["margin"]),
-                                   grid.y(-self.measurements["margin"]),
-                                   grid.x(-self.measurements["margin"])))
+
+        self.outline.layout(Bounds(self.grid.div_y(self.measurements["margin"]),
+                                   self.grid.div_x(self.measurements["margin"]),
+                                   self.grid.div_y(self.grid.y_divisions - 
+                                               self.measurements["margin"]),
+                                   self.grid.div_x(self.grid.x_divisions - 
+                                               self.measurements["margin"])))
 
         # inputs
         Chip_Layout.distribute_io(Bounds(self.outline.bounds.top,
                                          self.outline.bounds.left -
-                                          grid.x(self.measurements["io_width"]),
+                                          self.grid.div_x(self.measurements["io_width"]),
                                          self.outline.bounds.bottom,
                                          self.outline.bounds.left),
                                   self.inputs)
@@ -96,35 +101,37 @@ class Chip_Diagram:
                                          self.outline.bounds.right,
                                          self.outline.bounds.bottom,
                                          self.outline.bounds.right + 
-                                          grid.x(self.measurements["io_width"])),
+                                          self.grid.div_x(self.measurements["io_width"])),
                                   self.outputs)
 
-        Chip_Layout.distribute_parts(Bounds(grid.y(parts_margin),
-                                            grid.x(parts_margin),
-                                            grid.y(-parts_margin),
-                                            grid.x(-parts_margin)),
+        Chip_Layout.distribute_parts(Bounds(self.grid.div_y(parts_margin),
+                                            self.grid.div_x(parts_margin),
+                                            self.grid.div_y(self.grid.y_divisions - 
+                                                            parts_margin),
+                                            self.grid.div_x(self.grid.x_divisions - 
+                                                            parts_margin)),
                                     self.parts,
                                     self.chip_data.connections_data,
                                     self.chip_data.internal_wires,
-                                    grid.y(1),
-                                    grid.x(1))
+                                    self.grid.div_y(1),
+                                    self.grid.div_x(1))
         
-        Chip_Layout.distribute_connections(self.connections, grid) 
+        Chip_Layout.distribute_connections(self.connections, self.grid) 
 
 
     def draw(self):
-        self.canvas.draw_grid()
+        self.grid.draw(self.canvas)
         
-        self.title.draw()
-        self.outline.draw()
+        self.title.draw(self.canvas)
+        self.outline.draw(self.canvas)
         for input in self.inputs:
-            input.draw()
+            input.draw(self.canvas)
         for output in self.outputs:
-            output.draw()
+            output.draw(self.canvas)
         for part in self.parts:
-            part.draw()
+            part.draw(self.canvas)
         for connection in self.connections:
-            connection.draw()
+            connection.draw(self.canvas)
 
     def write(self):
         assert(self.title != None)

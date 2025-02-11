@@ -1,18 +1,4 @@
   TODO:
-  -re-work (and test) the grid class to create and use a 2d-array of points
-    -grid.get(0, 0) = (0, 0) # actual pixel values of grid coords
-    -grid.snap_x(point, left=True) # returns point where x has been moved
-      left or right to nearest y-div
-    -grid.snap_y(point, up=True)
-    -grid.snap(point, left=True, up=True)
-    -grid.is_on_grid_x(point) # returns boolean indicating if point x coord
-      is within threshold of a grid x div
-    -grid.is_on_grid_y(point)
-    -grid.is_grid_point(point)
-    -grid.get_neighbors(point) # checks one div away in all directions and
-      returns any of those points that are grid.is_grid_point()
-    -grid.draw(canvas) 
-
   -re-work canvas to not know about grids
   -take a second look at the drawing methods and re-work them as necessary to account
   for the fact that there are no sub-pixels when drawing
