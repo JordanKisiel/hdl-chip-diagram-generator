@@ -17,8 +17,8 @@ class Bounds:
                           width=style["stroke_width"])
         
     def expand(self, amount):
-        self.left += amount
-        self.top += amount
+        self.left -= amount
+        self.top -= amount
         self.right += amount
         self.bottom += amount
         self._calculate_properties()

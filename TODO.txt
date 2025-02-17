@@ -1,5 +1,41 @@
   TODO:
-  -re-work canvas to not know about grids
+  -audit code:
+    -my code is in a basic working state, so I think now is a good time
+    to audit and refactor as necessary
+      -possible issues:
+        -config data:
+          -I have a lot of configuration numbers spread throughout my code
+          -I may want to consider create a config class that loads in
+          settings from a config file so that there's a centralized place
+          for these settings
+            -the main problem I see with this is that I may have many
+            classes that need to access this config data
+              -is this a problem?
+              -I may want to have one config file but multiple config
+              classes that load their data from that file
+        
+  -connections:
+  -path finding:
+    -fix issues:
+      -colinearity scores help a good bit with connections being
+      drawn on top of each other but there's still an issue with lines
+      drawing through connection points (especially the first path since
+      there aren't any points to avoid)
+        -I could say that the connection points are already used before
+        any paths are drawn
+        -I have to be careful with how much weight I give to colinearity
+        because if I give it too much weight then the algo will take too
+        long to run exploring paths that have no chance of being correct
+          -As a possible solution to this, I could decrease the influence
+          of colinearity over time (number of iterations) or space (dist
+          traveled)
+      -colinearity doesn't minimize crossover
+        -I still need to change my ordering algo a bit which might help
+        with this
+      -need to calculate and add number of bends to path score to minimize bends
+  -re-examine code (especially chip layout and note most egregious code smells
+  and possible solutions)
+  -refactor
   -take a second look at the drawing methods and re-work them as necessary to account
   for the fact that there are no sub-pixels when drawing
     -due to that fact, I might want to always snap every coordinate passed to a drawing

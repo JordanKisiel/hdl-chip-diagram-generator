@@ -9,14 +9,5 @@ class Outline(Diagrammable):
         self.bounds = bounds
         
     def draw(self, canvas):
-        context = canvas.context
-        style = canvas.style
-
-        self.corner_radius = (self.bounds.min_dimension 
-                              * style["box_radius_factor"])
-
-        context.rounded_rectangle(self.bounds.full_bounds,
-                                  radius=self.corner_radius,
-                                  fill=None,
-                                  outline=style["fg"],
-                                  width=style["stroke_width"])
+        canvas.rectangle(self.bounds.full_bounds,
+                         radius=self.bounds.min_dimension)

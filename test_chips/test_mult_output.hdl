@@ -1,0 +1,7 @@
+CHIP Foo {
+IN a, b, c;
+OUT out1, out2;
+PARTS:
+ Something (a=a, b=b, out=x, out=out1);
+ Whatever (a=x, b=c, out=out2);
+}

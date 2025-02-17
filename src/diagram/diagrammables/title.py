@@ -12,13 +12,5 @@ class Title(Diagrammable):
     def draw(self, canvas):
         assert(self.bounds != None)
 
-        context = canvas.context
-        style = canvas.style
-
-        title_font = ImageFont.truetype(style["font"],
-                                        style["base_font_size"])
-        context.text((self.bounds.center_x, self.bounds.top),
-                     self.text,
-                     fill=style["fg"],
-                     font=title_font,
-                     anchor="mt")
+        canvas.text((self.bounds.center_x, self.bounds.top),
+                     self.text)

@@ -4,8 +4,6 @@ IN in1, in2, in3;
 OUT out1, out2;
 
 PARTS:
-And(a=in2, b=w3, out=w2);
-Adder(in1=in3, in2=w1, in3=in2, out1=w3, out2=out1);
-Not(a=w2, out=w1);
-And(a=in1, b=w1, out=out2);
+And(a=in1, b=in2, out=out1);
+Not(a=in3, out=out2);
 }

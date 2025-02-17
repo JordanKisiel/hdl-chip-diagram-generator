@@ -34,38 +34,46 @@ class Chip_Diagram:
     def generate(self):
         self.title = Title(self.chip_data.title_text)
         self.outline = Outline()
-        self.inputs = [IO(input_name, connect_left=False) 
+        self.inputs = [IO(input_name, is_input=True, connect_left=False) 
                        for input_name in self.chip_data.input_names]
-        self.outputs = [IO(output_name, connect_left=True) 
+        self.outputs = [IO(output_name, is_input=False, connect_left=True) 
                         for output_name in self.chip_data.output_names]
         self.parts = [Part(part["name"], 
                            part["id"], 
                            part["inputs"], 
                            part["outputs"]) 
                       for part in self.chip_data.parts_data]
-
+        
         for connection in self.chip_data.connections_data:
             part = self._get_part_by_id(connection["part_id"])
-            io_1 = self._get_part_io_by_name(part, connection["part_pin"])
+            io_1 = part.get_io(connection["part_pin"])
             io_2 = None
-            
-            if connection["other_pin"] in self.chip_data.internal_wires:
+            is_internal_wire = connection["other_pin"] in self.chip_data.internal_wires
+
+            # TODO:
+            # it's really hard to understand what's going on here,
+            # try extracting it or refactoring in some other way 
+            if is_internal_wire:
                 pin_data = self.chip_data.internal_wires[connection["other_pin"]]
-                other_pin_part = self._get_part_by_id(pin_data["part_id"])
-                io_2 = self._get_part_io_by_name(other_pin_part, pin_data["output_pin"]) 
+                part_id = pin_data["part_id"]
+                output = pin_data["output_pin"]
+                other_part = self._get_part_by_id(part_id)
+                io_2 = other_part.get_io(output)
             elif connection["other_pin"] in (self.chip_data.input_names + 
                                              self.chip_data.output_names):
                 io_2 = self._get_chip_io_by_name(connection["other_pin"])
 
-            # connection lines only draw correctly if drawn
-            # left to right, so swap io objects if necessary
-            if io_1.connect_left:
-                temp = io_1
-                io_1 = io_2
-                io_2 = temp
-
-            self.connections.append(Connection(io_1, io_2))
-
+            
+            wire_association = not io_1.is_input and is_internal_wire
+            if not wire_association:
+                # connection lines only draw correctly if drawn
+                # left to right, so swap io objects if necessary
+                if io_1.connect_left:
+                    temp = io_1
+                    io_1 = io_2
+                    io_2 = temp
+                
+                self.connections.append(Connection(io_1, io_2))
 
     def layout(self):
         assert(self.title != None)
@@ -94,11 +102,12 @@ class Chip_Diagram:
                                          self.outline.bounds.left -
                                           self.grid.div_x(self.measurements["io_width"]),
                                          self.outline.bounds.bottom,
-                                         self.outline.bounds.left),
+                                         self.outline.bounds.left + 
+                                         self.grid.div_x(1)),
                                   self.inputs)
         # outputs
         Chip_Layout.distribute_io(Bounds(self.outline.bounds.top,
-                                         self.outline.bounds.right,
+                                         self.outline.bounds.right - self.grid.div_x(1),
                                          self.outline.bounds.bottom,
                                          self.outline.bounds.right + 
                                           self.grid.div_x(self.measurements["io_width"])),
@@ -116,11 +125,14 @@ class Chip_Diagram:
                                     self.grid.div_y(1),
                                     self.grid.div_x(1))
         
-        Chip_Layout.distribute_connections(self.connections, self.grid) 
+        Chip_Layout.distribute_connections(self.connections, 
+                                           self.grid, 
+                                           self.parts, 
+                                           self.outline.bounds) 
 
 
     def draw(self):
-        self.grid.draw(self.canvas)
+        self.grid.draw(self.canvas, color=(60, 60, 60))
         
         self.title.draw(self.canvas)
         self.outline.draw(self.canvas)
@@ -146,16 +158,6 @@ class Chip_Diagram:
         assert(len(matching_io) == 1)
 
         return matching_io[0]
-    
-    def _get_part_io_by_name(self, part, name):
-        io_lst = part.inputs + part.outputs
-        matching_io = filter(lambda x: x.name == name, io_lst)
-        matching_io = list(matching_io)
-        # asserting that io names should be unique
-        # and that we're searching for name that should match something
-        assert(len(matching_io) == 1)
-
-        return matching_io[0] 
     
     def _get_part_by_id(self, id):
         matching_part = filter(lambda x: x.id == id, self.parts)

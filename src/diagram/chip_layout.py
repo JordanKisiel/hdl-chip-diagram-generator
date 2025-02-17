@@ -57,7 +57,8 @@ class Chip_Layout:
     # this will be replaced by a pathfinding
     # algo similar to A* but optimizing for
     # fewer bends, distance travelled, distance to target
-    def distribute_connections(connections, grid):
+    def distribute_connections(connections, grid, parts_list, chip_bounds):
+        points_used = []
         for connection in connections:
             point_1 = connection.io_1.get_connection_point()
             to_left_1 = connection.io_1.connect_left
@@ -66,97 +67,130 @@ class Chip_Layout:
             on_grid_point = grid.snap_x(point_1, to_left_1)
             off_grid_point = grid.snap_x(point_2, to_left_2)
             print(f"{connection.io_1.name} to {connection.io_2.name}:")
+            # print(f"on grid point: {on_grid_point}")
+            # print(f"off grid point: {off_grid_point}")
             path = Chip_Layout._find_connection_path(on_grid_point, 
                                                      off_grid_point,
-                                                     grid)
+                                                     grid,
+                                                     parts_list,
+                                                     chip_bounds,
+                                                     points_used)
+            points_used += path
             
-
-            print(f"first 3 pts: {path[:3]}")
-            print(f"last 2 pts: {path[-2:]}")
             connection.layout(path)
 
 
     # helper methods
     # -------------------------------------------------------------
 
-    def _find_connection_path(on_grid_point, off_grid_point, grid):
+    def _find_connection_path(on_grid_point, 
+                              off_grid_point, 
+                              grid, 
+                              parts_list,
+                              chip_bounds,
+                              points_used):
         paths = []
         target = off_grid_point
+
+        init_colinearity = Chip_Layout._get_colinearity_score([on_grid_point], 
+                                                              points_used)
 
         initial_path = {
             "points": [on_grid_point],
             "dist_traveled": 0,
             "bends": 0,
-            "dist_to_target": math.dist(on_grid_point, off_grid_point),
-            "score": Chip_Layout._score(0, math.dist(on_grid_point, off_grid_point))
+            "dist_to_target": Chip_Layout._manhattan_dist(on_grid_point, off_grid_point),
+            "score": Chip_Layout._score_path(0, 
+                                             math.dist(on_grid_point, off_grid_point), 
+                                             init_colinearity)
         }
 
         paths.append(initial_path)
         current = None
 
+        #chip_bounds.expand(-10)
+
         while len(paths) > 0:
             current = paths[0]
             current_end_point = current["points"][-1]
-            found_target_x = (abs(current_end_point[0] - target[0]) <= 
+            found_target_x = (abs(current_end_point[0] - target[0]) < 
                               grid.column_width)
-            found_target_y = (abs(current_end_point[1] - target[1]) <=
+            found_target_y = (abs(current_end_point[1] - target[1]) <
                               grid.row_height)
 
             if found_target_x and found_target_y:
                 print("FOUND TARGET")
+                print(current)
                 
                 break
             
-            # TODO:
-            # -figure out why we're sometimes not finding the target
-            #  -seems to be related to not finding enough neighbors
-            #   -which also may be related to not finding neighbors that haven't
-            #   already been visited
             neighbors = grid.get_neighbors(current_end_point)
-            print(f"neighbors: {neighbors}")
             for neighbor in neighbors:
-                if neighbor not in current["points"]:
+                visited = neighbor in current["points"]
+                inside_part = Chip_Layout._is_point_inside_part(neighbor, 
+                                                                parts_list)
+                is_inside_chip = chip_bounds.is_inside(neighbor)
+
+                if not visited and not inside_part and is_inside_chip:
                     points = [*current["points"], neighbor]
                     dist_traveled = current["dist_traveled"] + 1
                     bends = 0
-                    dist_to_target = math.dist(neighbor, target)
+                    dist_to_target = Chip_Layout._manhattan_dist(neighbor, target)
+                    colinearity = Chip_Layout._get_colinearity_score(points, points_used)
                     new_path = {
                         "points": points, 
                         "dist_traveled": dist_traveled,
                         "bends": bends,
                         "dist_to_target": dist_to_target,
-                        "score": Chip_Layout._score(dist_traveled, dist_to_target)
+                        "score": Chip_Layout._score_path(dist_traveled, 
+                                                         dist_to_target,
+                                                         colinearity)
                     }
                     paths.append(new_path)
 
             paths = paths[1:]
-            print(len(paths))
             paths.sort(key=lambda x: x["score"])
 
-        # TODO:
-        # path finding algorithm
-        # -the on_grid and off_grid points are not
-        #  grid points per se
-        #  -to determine if the current grid point has reached
-        #   the target, the x grid point must be within 1 row_height
-        #   and the y grid point must be within 1 col_width of the
-        #    off_grid_point
-        #     -also accounting for some threshold
-        # -account for the following:
-        #  -part group bounds
-        #  -part collision detection (expand bounds if necessary)
-        #  -bends
-        #    -I think I need to look back two points in the path
-        #     and if both the x and y changed, then increment num_bends
-        #  -distance travelled
-        #  -distance to target
-        # -probably use some variation of the A* algorithm but
-        #  using the above properties to sort my priority queue
-        # print([on_grid_point, *paths[0]["points"], off_grid_point])
         return [on_grid_point, *current["points"], off_grid_point]
+    
+    def _manhattan_dist(point1, point2):
+        return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
-    def _score(dist_traveled, dist_to_target):
-        return dist_traveled + dist_to_target
+    def _score_path(dist_traveled, dist_to_target, colinearity):
+        # TODO:
+        # fix error (one of these is a list?)
+        return dist_to_target + colinearity
+    
+    def _get_colinearity_score(points, points_used):
+        score = 0
+        for point in points:
+            for point_used in points_used:
+                x_matches = point[0] == point_used[0]
+                y_matches = point[1] == point_used[1]
+                if x_matches:
+                    score += 1
+                if y_matches:
+                    score += 1
+                if x_matches and y_matches:
+                    score += 16
+
+        return score
+    
+    def _is_point_inside_part(point, parts_list):
+        bounds_lst = []
+        for part in parts_list:
+            part_bounds = Bounds(part.bounds.top,
+                                 part.bounds.left,
+                                 part.bounds.bottom,
+                                 part.bounds.right)
+            part_bounds.expand(10)
+            bounds_lst.append(part_bounds)
+
+        for bounds in bounds_lst:
+            if bounds.is_inside(point):
+                return True
+        
+        return False
 
     def _snap(value, div_value, snap_lower=True):
         threshold = 0.001
@@ -182,6 +216,12 @@ class Chip_Layout:
         ordering_metric = 0
         part_connections = Chip_Layout._get_connections_by_part_id(part.id, 
                                                                     connections_data)
+        
+        # TODO:
+        # make this algo more sophisticated
+        # specifically, account for the cases where input is coming from
+        # chip input => move left
+        # and case where part output is going to chip output => move right
 
         # move part to the right for each input it has
         # and more to the right for each input that comes

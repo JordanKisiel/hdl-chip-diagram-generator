@@ -38,6 +38,10 @@ def compile(source_path, dest_filename):
 
 def diagram(chip, primitive_chips, custom_chips):
     canvas = Canvas(800, 600)
+    canvas.set_style({
+        "bg": (50,50,50),
+        "fg": (220, 220, 220)
+        })
     chip_data = Chip_Data(primitive_chips, custom_chips)
     chip_diagram = Chip_Diagram(canvas, chip_data)
     chip_diagram.diagram(chip)

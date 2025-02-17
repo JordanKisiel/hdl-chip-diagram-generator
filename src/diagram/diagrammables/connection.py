@@ -17,18 +17,4 @@ class Connection(Diagrammable):
         self._draw_path(canvas)
 
     def _draw_path(self, canvas):
-        context = canvas.context
-        style = canvas.style
-
-        # TODO: also look into giving this rounded corners?
-        context.line(self.path, 
-                     fill=style["fg"], 
-                     width=style["stroke_width"])
-
-    def _draw_straight_line(self, canvas):
-        context = canvas.context
-        style = canvas.style
-
-        context.line([self.point1, self.point2],
-                     fill=style["fg"],
-                     width=style["stroke_width"])
+        canvas.path(self.path)

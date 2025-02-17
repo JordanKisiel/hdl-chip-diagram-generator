@@ -14,7 +14,6 @@ class Grid(Diagrammable):
         self.y_divisions = y_divisions
         self.column_width = self.width / x_divisions
         self.row_height = self.height / y_divisions
-        self.color = (255, 220, 220)
         self._on_grid_threshold = 1
         self.grid = self._construct_grid()
         assert(width > 0)
@@ -155,21 +154,17 @@ class Grid(Diagrammable):
 
         self.grid = self._construct_grid()
 
-    def draw(self, canvas):
-        context = canvas.context
-
+    def draw(self, canvas, color=(255, 220, 220)):
         # draw horizontal lines
         for n in range(0, self.y_divisions + 1):
             y_value = self.grid[0][n][1]
-            context.line([(self.bounds.left, y_value),
-                          (self.bounds.right, y_value)],
-                          self.color,
-                          width=2)
+            canvas.line([(self.bounds.left, y_value),
+                         (self.bounds.right, y_value)],
+                         color) 
 
         # draw vertical lines
         for n in range(0, self.x_divisions + 1):
             x_value = self.grid[n][0][0]
-            context.line([(x_value, self.bounds.top),
+            canvas.line([(x_value, self.bounds.top),
                           (x_value, self.bounds.bottom)],
-                          self.color,
-                          width=2)
+                          color)
