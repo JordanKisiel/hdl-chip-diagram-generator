@@ -13,7 +13,69 @@
               -is this a problem?
               -I may want to have one config file but multiple config
               classes that load their data from that file
-        
+    -General Architecture
+      -instead of my chip diagram class having to know everything about
+      how all the chip components are generated, laid out, and drawn,
+      I can have collection objects that handle that instead
+        -for example, I can have a Connections class that takes in the
+        chip data and grabs what it needs and handles all the logic
+        and data for connections
+          -I can have a Parts class that does the same thing
+          -what about IO objects?
+    -I have some error messages and warnings where the display of the
+    error should probably be handled by error class
+    -Chip Diagram class:
+      -_generate_connections method:
+        -chip diagram very tightly coupled to internal structure of
+        chip_data.connections_data
+          -possible solutions:
+            -could delegate the generation of diagrammable objects to
+            the chip data class
+              -but this doesn't feel very natural, the chip data class
+              should really only be concerned with getting the relevant
+              data from the chip AST
+          -thoughts:
+            -the fact that I have to dig so much into the internals of the
+            connection data and do so much complicated logic with it is
+            probably indicative of some issue
+              -possibly that the data that chip data class gets should be
+              data classes themselves?
+            -look into factory patterns again to see if any of them fit
+            my situation where I'm generating the different diagrammable
+            objects
+            -also do a search solutions to code smell where you have to
+            access internal structure of data
+            -if changing the internal structure of the data also
+            requires changing the code that uses it then maybe those pieces
+            of code should be in the same class
+            -when I create a connection I'm passing in two io objects which are
+            View objects if I'm thinking of things like a Model-View pattern
+              -by contrast, I'm only using data (Model) to create other View objects
+              -so I probably need to change the connection object to only use data
+              and not IO objects (it will generate the io objects internally like
+              the Part class does)
+            -an abstraction that I may want to try is to use a Model-View pattern
+            for each diagrammable object (except maybe title which only needs text 
+            for its Model)
+              -each View object then would only require that you pass in the Model
+              object when it's created
+              -the Chip_Data object would create all the Model objects based upon
+              the chip_ast
+            -It might make sense for IO objects to have unique ids but I'm not
+            sure
+              -wait until I implement the Connection_Model to decide        
+            -Connection_Model:
+              -the problem with the connection model is that it really only
+              needs the connection points from the io objects but the
+              connection points aren't determined until the io view objects
+              are laid out
+                -this would suggest that I need to layout the io in order
+                to generate the connection_model objects?
+              -maybe my current concept of diagrammables is wrong
+                -maybe the models should have the layout method and,
+                and therefore, all the position and other related data
+                  -then I would have the models be layoutables and the
+                  views be drawables
   -connections:
   -path finding:
     -fix issues:

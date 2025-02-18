@@ -61,7 +61,6 @@ class Canvas:
       if font_size == None:
          font_size = self.style["base_font_size"]
 
-      print(f"font size: {font_size}")
       if font_size < self.style["min_font_size"]:
          # TODO:
          # consider having the display of these warning messages being

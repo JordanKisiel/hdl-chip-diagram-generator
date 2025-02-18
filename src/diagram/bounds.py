@@ -8,13 +8,7 @@ class Bounds:
         self._check_bounds() 
         
     def draw(self, canvas):
-        style = canvas.style
-        context = canvas.context
-
-        context.rectangle(self.full_bounds,
-                          fill=None,
-                          outline=style["fg"],
-                          width=style["stroke_width"])
+        canvas.rectangle(self.point_bounds)
         
     def expand(self, amount):
         self.left -= amount
@@ -53,10 +47,21 @@ class Bounds:
         self.bottom_left = (self.left, self.bottom)
         self.top_right= (self.right, self.top)
         self.bottom_right= (self.right, self.bottom)
-        self.full_bounds = [self.top_left, self.bottom_right]
+        self.point_bounds = [self.top_left, self.bottom_right]
 
     def _check_bounds(self):
+        # TODO:
+        # the display of this error should probably be delegated to
+        # an error class
         if self.top > self.bottom:
-            raise Exception("Top edge of boundary cannot be below bottom edge.")
+            error_message = (
+                f"Top edge (top: {self.top}) of boundary cannot be below "
+                f"bottom edge (bottom: {self.bottom})."
+            )
+            raise Exception(error_message)
         if self.left > self.right:
-            raise Exception("Left edge of boundary cannot be to the right of the right edge.")
+            error_message = (
+                f"Left edge (left: {self.left}) of boundary cannot be to "
+                f"to the right of the right edge (right: {self.right})."
+            )
+            raise Exception(error_message)

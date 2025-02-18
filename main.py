@@ -43,8 +43,9 @@ def diagram(chip, primitive_chips, custom_chips):
         "fg": (220, 220, 220)
         })
     chip_data = Chip_Data(primitive_chips, custom_chips)
-    chip_diagram = Chip_Diagram(canvas, chip_data)
-    chip_diagram.diagram(chip)
+    chip_data.parse_chip(chip)
+    chip_diagram = Chip_Diagram()
+    chip_diagram.diagram(chip_data, canvas)
 
     chip_diagram.write()
 

@@ -8,10 +8,8 @@ from src.diagram.diagrammables.connection import Connection
 from src.diagram.chip_layout import Chip_Layout
 
 class Chip_Diagram:
-    def __init__(self, canvas, chip_data):
-        self.canvas = canvas
-        self.grid = Grid(canvas.width, canvas.height, 32, 32)
-        self.chip_data = chip_data
+    def __init__(self):
+        
         self.title = None
         self.outline = None
         self.inputs = []
@@ -19,19 +17,27 @@ class Chip_Diagram:
         self.parts = []
         self.connections = []
 
+        # TODO:
+        # these aren't magic numbers but they should also
+        # probably be config
         self.measurements = {
             "margin": 5,
             "title_margin": 2,
             "io_width": 3
         }
 
-    def diagram(self, chip_ast):
-        self.chip_data.get_data(chip_ast)
+    def diagram(self, chip_data, canvas):
+        self.canvas = canvas
+        self.chip_data = chip_data
         self.generate()
         self.layout()
         self.draw()
 
     def generate(self):
+        # TODO:
+        # magic numbers here for grid rows and cols
+        # could be candidate for config
+        self.grid = Grid(self.canvas.width, self.canvas.height, 32, 32)
         self.title = Title(self.chip_data.title_text)
         self.outline = Outline()
         self.inputs = [IO(input_name, is_input=True, connect_left=False) 
@@ -44,37 +50,9 @@ class Chip_Diagram:
                            part["outputs"]) 
                       for part in self.chip_data.parts_data]
         
-        for connection in self.chip_data.connections_data:
-            part = self._get_part_by_id(connection["part_id"])
-            io_1 = part.get_io(connection["part_pin"])
-            io_2 = None
-            is_internal_wire = connection["other_pin"] in self.chip_data.internal_wires
-
-            # TODO:
-            # it's really hard to understand what's going on here,
-            # try extracting it or refactoring in some other way 
-            if is_internal_wire:
-                pin_data = self.chip_data.internal_wires[connection["other_pin"]]
-                part_id = pin_data["part_id"]
-                output = pin_data["output_pin"]
-                other_part = self._get_part_by_id(part_id)
-                io_2 = other_part.get_io(output)
-            elif connection["other_pin"] in (self.chip_data.input_names + 
-                                             self.chip_data.output_names):
-                io_2 = self._get_chip_io_by_name(connection["other_pin"])
-
-            
-            wire_association = not io_1.is_input and is_internal_wire
-            if not wire_association:
-                # connection lines only draw correctly if drawn
-                # left to right, so swap io objects if necessary
-                if io_1.connect_left:
-                    temp = io_1
-                    io_1 = io_2
-                    io_2 = temp
-                
-                self.connections.append(Connection(io_1, io_2))
-
+        self.connections = self._generate_connections()
+        
+        
     def layout(self):
         assert(self.title != None)
         assert(self.outline != None)
@@ -148,6 +126,41 @@ class Chip_Diagram:
     def write(self):
         assert(self.title != None)
         self.canvas.out.save(f"{self.chip_data.title_text}_Chip.png")
+
+    def _generate_connections(self):
+        connections = []
+        for connection in self.chip_data.connections_data:
+            part = self._get_part_by_id(connection["part_id"])
+            io_1 = part.get_io(connection["part_pin"])
+            io_2 = None
+            is_internal_wire = connection["other_pin"] in self.chip_data.internal_wires
+
+            # TODO:
+            # it's really hard to understand what's going on here,
+            # try extracting it or refactoring in some other way 
+            if is_internal_wire:
+                pin_data = self.chip_data.internal_wires[connection["other_pin"]]
+                part_id = pin_data["part_id"]
+                output = pin_data["output_pin"]
+                other_part = self._get_part_by_id(part_id)
+                io_2 = other_part.get_io(output)
+            elif connection["other_pin"] in (self.chip_data.input_names + 
+                                             self.chip_data.output_names):
+                io_2 = self._get_chip_io_by_name(connection["other_pin"])
+
+            
+            wire_association = not io_1.is_input and is_internal_wire
+            if not wire_association:
+                # connection lines only draw correctly if drawn
+                # left to right, so swap io objects if necessary
+                if io_1.connect_left:
+                    temp = io_1
+                    io_1 = io_2
+                    io_2 = temp
+                
+                connections.append(Connection(io_1, io_2))
+
+        return connections
 
     def _get_chip_io_by_name(self, name):
         io_lst = self.inputs + self.outputs
